@@ -6,29 +6,26 @@ on:
       - main
 
 jobs:
-  runs-on: ubuntu-latest
+  deploy:                     
+    runs-on: ubuntu-latest    
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  steps: 
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: SSH to server and build
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        script: |
-          set -e
-          cd ~/Pizzaro
-
-          git fetch --all
-          git checkout main
-          git pull --ff-only
-
-          # Поднимаем контейнеры в фоне
-          docker compose up -d
-
-          # Чистим старые образы и остановленные контейнеры
-          docker image prune -f || true
-          docker container prune -f || true
+      - name: SSH to server and build
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            cd ~/Pizzaro
+            git fetch --all
+            git checkout main
+            git pull --ff-only
+            # Поднимаем контейнеры в фоне
+            docker compose up -d
+            # Чистим старые образы и остановленные контейнеры
+            docker image prune -f || true
+            docker container prune -f || true
