@@ -1,4 +1,15 @@
 services:
+  db:
+    image: postgres:16
+    container_name: pizzaro-db
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - .env.local
+    ports:
+      - "5432:5432"
+      
   frontend:
     container_name: pizzaro-frontend
     build:
@@ -12,16 +23,7 @@ services:
       - .env.local
     depends_on:
       - db
-  db:
-    image: postgres:16
-    container_name: pizzaro-db
-    restart: unless-stopped
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    env_file:
-      - .env.local
-    ports:
-      - "5432:5432"
+  
 
 volumes:
   db_data:
