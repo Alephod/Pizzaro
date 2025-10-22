@@ -12,12 +12,23 @@ const compat = new FlatCompat({
 const eslintConfig = [
     ...compat.extends('next/core-web-vitals', 'next/typescript'),
     {
-        ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
+        ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'dist/**', 'public/**', 'coverage/**', 'prisma/generated/**', 'next.config.ts'],
+    },
+    {
         rules: {
-            'no-console': 'warn', // <--- добавляем сюда
-            // можно добавить и другие правила, например:
-            // "no-unused-vars": "warn",
-            // "@typescript-eslint/explicit-function-return-type": "warn"
+            'no-console': 'warn',
+            'no-debugger': 'error',
+            'no-unused-vars': 'warn',
+            eqeqeq: ['error', 'always'],
+            '@typescript-eslint/ban-ts-comment': 'warn',
+            '@typescript-eslint/no-empty-function': 'warn',
+            '@typescript-eslint/no-empty-interface': 'warn',
+            '@typescript-eslint/explicit-module-boundary-types': 'off',
+            '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
+            '@next/next/no-img-element': 'warn',
+            '@next/next/no-html-link-for-pages': 'warn',
+            semi: ['error', 'always'],
+            quotes: ['error', 'single'],
         },
     },
 ];
