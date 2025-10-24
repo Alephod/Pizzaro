@@ -1,0 +1,32 @@
+.input {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 18px;
+    height: 55px;
+    border: 1px solid var(--gray);
+    border-radius: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 4px 0 #fe782b;
+    }
+
+    &::placeholder {
+        color: #999;
+    }
+}
+
+.error {
+    border-color: var(--danger);
+
+    &:focus {
+        box-shadow: 0 0 0 4px var(--danger);
+    }
+}
+
+.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
