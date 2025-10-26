@@ -1,20 +1,22 @@
-import style from './page.module.scss';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/authOptions';
+import { redirect } from 'next/navigation';
+import { AdminLoginForm } from './AdminLoginForm';
 
-import { Button } from '@/components/ui/Button/Button';
-import { Input } from '@/components/ui/Input/Input';
+import style from './page.module.scss';
 import Image from 'next/image';
 
-export default function AdminAuthPage() {
+export default async function AdminLoginPage() {
+    const session = await getServerSession(authOptions);
+
+    if (session) {
+        redirect('/admin/dashboard');
+    }
+
     return (
         <main className={'container ' + style.main}>
             <Image className={style.logo} alt="Pizzaro admin" src="/logo-admin.svg" width={150} height={60} />
-            <form className={style.form}>
-                <Input placeholder="Ваш логин" />
-                <Input placeholder="Ваш пароль" />
-                <Button type="submit" size="lg" variant="primary">
-                    Войти
-                </Button>
-            </form>
+            <AdminLoginForm />
         </main>
     );
 }
