@@ -18,6 +18,29 @@
     }
 }
 
+.inputWrapper {
+    position: relative;
+}
+
+.showPassword {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+
+    svg {
+        transition: 0.15 ease;
+        stroke: var(--gray);
+    }
+
+    &:hover {
+        svg {
+            stroke: #414141;
+        }
+    }
+}
+
 .error {
     border-color: var(--danger);
 

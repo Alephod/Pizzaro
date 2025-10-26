@@ -24,12 +24,12 @@ export function AdminLoginForm() {
 
     return (
         <form className={style.form} onSubmit={handleSubmit}>
-            <Input type="text" placeholder="Ваш логин" onChange={(e) => setUsername(e.target.value)} />
-            <Input type="password" placeholder="Ваш пароль" onChange={(e) => setPassword(e.target.value)} />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <Input type="text" placeholder="Ваш логин" value={username} onChange={e => setUsername(e.target.value)} />
+            <Input type="password" placeholder="Ваш пароль" value={password} onChange={e => setPassword(e.target.value)} />
             <Button type="submit" size="lg" variant="primary">
                 Войти
             </Button>
+            {error && <p className={style.errorMassage}>{error}</p>}
         </form>
     );
 }
