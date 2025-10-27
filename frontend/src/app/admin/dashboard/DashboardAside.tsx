@@ -5,7 +5,7 @@ import { Utensils } from 'lucide-react';
 import style from './layout.module.scss';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ElementType } from 'react';
+import { useState, type ElementType } from 'react';
 import { usePathname } from 'next/navigation';
 
 interface AsideProps {
@@ -27,15 +27,21 @@ const navItems: NavItem[] = [
 ];
 
 export default function DashboardAside({ username }: AsideProps) {
+    const [isClosed, setIsClosed] = useState(false);
+
     const pathname = usePathname();
 
     return (
-        <aside className={style.aside}>
+        <aside className={style.aside + ' ' + (isClosed ? style.asideСlosed : '')}>
             <div className={style.header}>
                 <div className={style.logo}>
                     <Image alt="Pizzaro admin" src="/logo-admin.svg" width={150} height={60} />
                 </div>
-                <ArrowLeft className={style.arrow} />
+                <div className={style.arrowWrapper}>
+                    <div className={style.arrow}>
+                        <ArrowLeft onClick={() => setIsClosed(!isClosed)} />
+                    </div>
+                </div>
             </div>
 
             {navItems.map(item => {
@@ -49,6 +55,7 @@ export default function DashboardAside({ username }: AsideProps) {
             })}
 
             <div className={style.profile}>
+                <div className={style.profileAvatar}></div>
                 <p>{username}</p>
                 <EllipsisVertical className={style.profileOptions} />
             </div>

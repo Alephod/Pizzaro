@@ -6,14 +6,14 @@
     height: 100svh;
     position: relative;
     display: flex;
+    z-index: 3;
     flex-direction: column;
     width: 270px;
     background: #fff;
     box-shadow: 0 0 14px -1px rgba(0, 0, 0, 0.08);
     border-radius: 0 15px 15px 0;
     border-right: 1px solid var(--light-gray);
-    overflow: hidden;
-    transition: 2s;
+    transition: 0.3s;
 }
 
 .header {
@@ -22,20 +22,42 @@
     justify-content: space-between;
     border-bottom: 1px solid var(--light-gray);
     padding: 10px 15px;
+    position: relative;
+    transition: 0.3s;
 }
-
+.arrowWrapper {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 10px;
+    transition: 0.3s;
+}
 .arrow {
-    cursor: pointer;
-    transition: 0.15s;
-    stroke-width: 2.25px;
+    clip-path: path(
+        'M0.201263 0L16.6349 1.57713C24.3287 2.3155 30.2019 8.77932 30.2019 16.5085V60.4252C30.2019 68.1314 24.3625 74.5839 16.6944 75.3507L0.20166 77C0.20166 77 0.201624 71.5 0.201721 71C0.201817 70.5 -0.252129 20.7103 0.201616 10.5C0.36054 6.92381 0.201263 0 0.201263 0Z'
+    );
+    clip-rule: evenodd;
+    background: #fff;
+    height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 31px;
+    svg {
+        cursor: pointer;
+        transition: 0.5s;
+        stroke-width: 2.25px;
 
-    &:hover {
-        stroke: var(--primary);
+        &:hover {
+            stroke: var(--primary);
+        }
     }
 }
 
 .logo {
-    overflow: hidden;
+    overflow-x: hidden;
+    transition: 0.15s;
+    z-index: 2;
 }
 
 .link {
@@ -50,13 +72,17 @@
     gap: 13px;
     border-bottom: 1px solid var(--light-gray);
     padding: 0 15px;
-    transition: 0.15s;
+    transition: 0.3s;
 
     svg,
     path {
         transition: 0.15s;
         stroke-width: 2.25px;
         flex-shrink: 0;
+    }
+
+    span {
+        transition: 0.3s;
     }
 
     &:hover {
@@ -74,8 +100,59 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
+    transition: 0.3s;
+    p {
+        flex-grow: 1;
+        transition: 0.2s;
+    }
+}
+
+.profileAvatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--gray);
+    flex-shrink: 0;
 }
 
 .profileOptions {
     cursor: pointer;
+}
+
+.asideСlosed {
+    width: 68px;
+    border-radius: 0;
+    .header {
+        padding: 10px 6px;
+    }
+    .arrowWrapper {
+        z-index: -1;
+        right: -32px;
+        filter: drop-shadow(4px 0px 6px rgba(0, 0, 0, 0.04));
+    }
+    .arrow {
+        justify-content: center;
+        svg {
+            transform: rotateY(180deg);
+        }
+    }
+
+    .link {
+        gap: 0;
+        padding: 20px;
+
+        span {
+            opacity: 0;
+        }
+    }
+    .logo {
+        width: 58px;
+    }
+    .profile {
+        padding: 15px 8px;
+        p {
+            opacity: 0;
+        }
+    }
 }
