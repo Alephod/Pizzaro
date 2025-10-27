@@ -15,8 +15,8 @@ export function AdminLoginForm() {
         e.preventDefault();
         const res = await signIn('admin-credentials', {
             redirect: false,
-            username,
-            password,
+            username: username.trim(),
+            password: password.trim(),
         });
         if (res?.error) setError('Неверный логин или пароль');
         else window.location.href = '/admin/dashboard';
