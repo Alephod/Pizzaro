@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
 import './globals.scss';
+import ModalProvider from '@/providers/ModalProvider';
 
 const openSans = Open_Sans({
     subsets: ['latin', 'cyrillic'],
@@ -20,7 +21,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ru" className={openSans.variable}>
-            <body>{children}</body>
+            <body>
+                <ModalProvider>{children}</ModalProvider>
+            </body>
         </html>
     );
 }
