@@ -2,25 +2,25 @@
 
 import { ModalContext } from '@/providers/ModalProvider';
 import { useContext } from 'react';
+import AddSectionModal from './AddSectionModal';
 
 export default function AdminDashboard() {
-    const { openModal } = useContext(ModalContext);
+    const { openModal, closeModal } = useContext(ModalContext);
 
     const handleOpenModal = () => {
         openModal(
-            <div>
-                <h2>Добавить раздел</h2>
-                <form>
-                    <input placeholder="Название раздела" />
-                    <button type="submit">Сохранить</button>
-                </form>
-            </div>
+            <AddSectionModal
+                onSubmit={data => {
+                    console.log('Новая секция:', data);
+                    closeModal();
+                }}
+            />
         );
     };
 
     return (
         <main>
-            <div>Меню</div>
+            <h1>Меню</h1>
             <button onClick={handleOpenModal}>Добавить раздел</button>
         </main>
     );

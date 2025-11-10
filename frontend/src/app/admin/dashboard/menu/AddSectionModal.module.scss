@@ -1,0 +1,93 @@
+.form {
+    width: min(650px, 100vw - 70px);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.field {
+    position: relative;
+
+    svg {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        z-index: 6;
+        stroke: var(--gray);
+        transition: stroke 0.15ms;
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover {
+                stroke: #4d4d4d;
+            }
+        }
+    }
+}
+
+.sectionFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    grid-column: 1 / -1;
+}
+
+.optionsTitle {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+}
+
+.option {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 35px;
+    border: 1px solid var(--gray);
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--bg, transparent);
+    width: auto;
+    box-sizing: content-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus-within {
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 4px 0 #fe782b;
+    }
+}
+
+.option input {
+    all: unset !important;
+    outline: none;
+    height: 100%;
+    width: auto;
+    min-width: 5ch;
+    font: inherit;
+    transition: min-width 120ms ease, width 120ms ease;
+}
+
+.optionAdd {
+    color: var(--primary);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.submitBtn {
+    align-self: end;
+}
