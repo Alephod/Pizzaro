@@ -34,8 +34,11 @@ export default function ModalProvider({ children }: ModalProviderProps) {
     };
 
     const closeModal = () => {
-        setIsOpen(false);
-        setModalContent(null);
+        // задержка должна совпадать с длительностью CSS closing animation (здесь 300ms)
+        setTimeout(() => {
+            setIsOpen(false);
+            setModalContent(null);
+        }, 170);
     };
 
     return (

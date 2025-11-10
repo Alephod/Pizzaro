@@ -1,7 +1,7 @@
 'use client';
 
-import type { ReactNode, MouseEvent, KeyboardEvent } from 'react';
-import { useEffect } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import style from './Modal.module.scss';
 
@@ -16,28 +16,33 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, children, className, zIndex = 1000 }: ModalProps) {
+    const pointerDownOnBackdropRef = useRef(false);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const backdropRef = useRef<HTMLDivElement>(null);
+    const [isClosing, setIsClosing] = useState(false);
+
     // Закрытие по Escape и popstate
     useEffect(() => {
         if (!isOpen) return;
 
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') startClose();
         };
 
         const handlePopState = () => {
-            onClose();
+            startClose();
         };
 
         window.history.pushState({ modal: true }, '');
 
-        document.addEventListener('keydown', handleEsc as unknown as EventListener);
+        document.addEventListener('keydown', handleEsc);
         window.addEventListener('popstate', handlePopState);
 
         return () => {
-            document.removeEventListener('keydown', handleEsc as unknown as EventListener);
+            document.removeEventListener('keydown', handleEsc);
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     // Блокировка скролла body
     useEffect(() => {
@@ -55,37 +60,62 @@ export default function Modal({ isOpen, onClose, children, className, zIndex = 1
             }
 
             return () => {
-                if (isOpen) {
-                    openModals--;
+                openModals--;
 
-                    if (openModals === 0) {
-                        const y = parseInt(document.body.style.top || '0') * -1;
-                        document.body.style.position = '';
-                        document.body.style.top = '';
-                        document.body.style.left = '';
-                        document.body.style.right = '';
-                        document.body.style.overflow = '';
-                        document.body.style.width = '';
+                if (openModals === 0) {
+                    const y = parseInt(document.body.style.top || '0') * -1;
+                    document.body.style.position = '';
+                    document.body.style.top = '';
+                    document.body.style.left = '';
+                    document.body.style.right = '';
+                    document.body.style.overflow = '';
+                    document.body.style.width = '';
 
-                        window.scrollTo(0, y);
-                    }
+                    window.scrollTo(0, y);
                 }
             };
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (isOpen) setIsClosing(false);
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
+    // Начало нажатия на бэкдроп
+    const handleBackdropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        pointerDownOnBackdropRef.current = e.target === e.currentTarget;
+    };
+
+    // Запустить анимацию закрытия и уведомить провайдера (onClose)
+    const startClose = () => {
+        if (isClosing) return;
+        setIsClosing(true);
+
+        contentRef.current?.classList.add(style.closing);
+        backdropRef.current?.classList.add(style.backdropClosing);
+        onClose();
+    };
+
+    // Закрываем только если pointerdown тоже был на бэкдропе
     const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
-        if (e.currentTarget === e.target) {
-            onClose();
+        if (e.currentTarget === e.target && pointerDownOnBackdropRef.current) {
+            startClose();
         }
+        pointerDownOnBackdropRef.current = false;
     };
 
     return ReactDOM.createPortal(
-        <div className={`${style.modalBackdrop} ${className || ''}`} style={{ zIndex }} onClick={handleBackdropClick}>
-            <div className={style.modalContent} onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} aria-label="Close modal" className={style.modalCloseBtn} />
+        <div
+            ref={backdropRef}
+            className={`${style.modalBackdrop} ${isClosing ? style.backdropClosing : ''} ${className || ''}`}
+            style={{ zIndex }}
+            onPointerDown={handleBackdropPointerDown}
+            onClick={handleBackdropClick}
+        >
+            <div ref={contentRef} className={`${style.modalContent} ${isClosing ? style.closing : ''}`} onClick={e => e.stopPropagation()}>
+                <button onClick={startClose} aria-label="Close modal" className={style.modalCloseBtn} />
                 {children}
             </div>
         </div>,
