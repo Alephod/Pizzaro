@@ -22,10 +22,18 @@ interface AddSectionModalProps {
     onSubmit: (data: SectionData) => void;
 }
 
+interface SubmittedField {
+    name: string;
+    type: 'text' | 'textarea' | 'file' | 'number';
+}
+
 export interface SectionData {
     name: string;
     slug: string;
-    fields: Field[];
+    schema: {
+        fields: SubmittedField[];
+        options: string[];
+    };
 }
 
 export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
@@ -93,7 +101,16 @@ export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        onSubmit({ name: sectionName, slug: sectionSlug, fields });
+        const submittedFields: SubmittedField[] = fields.map(f => ({ name: f.name, type: f.type }));
+        const submittedOptions: string[] = options.map(o => o.value);
+        onSubmit({
+            name: sectionName,
+            slug: sectionSlug,
+            schema: {
+                fields: submittedFields,
+                options: submittedOptions,
+            },
+        });
     };
 
     return (

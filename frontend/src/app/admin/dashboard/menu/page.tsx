@@ -1,27 +1,18 @@
-'use client';
+import AdminMenuClient from './AdminMenuClient';
 
-import { ModalContext } from '@/providers/ModalProvider';
-import { useContext } from 'react';
-import AddSectionModal from './AddSectionModal';
+async function fetchMenuSections() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/menu-section`, {
+        method: 'GET',
+        cache: 'no-store',
+    });
+    if (!res.ok) {
+        throw new Error('Failed to fetch menu sections');
+    }
+    return res.json();
+}
 
-export default function AdminDashboard() {
-    const { openModal, closeModal } = useContext(ModalContext);
+export default async function AdminMenu() {
+    const data = await fetchMenuSections();
 
-    const handleOpenModal = () => {
-        openModal(
-            <AddSectionModal
-                onSubmit={data => {
-                    console.log('Новая секция:', data);
-                    closeModal();
-                }}
-            />
-        );
-    };
-
-    return (
-        <main>
-            <h1>Меню</h1>
-            <button onClick={handleOpenModal}>Добавить раздел</button>
-        </main>
-    );
+    return <AdminMenuClient sectionsData={data} />;
 }
