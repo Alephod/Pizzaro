@@ -1,11 +1,14 @@
 'use client';
-import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input/Input';
 import slugify from 'slugify';
-import style from './AddSectionModal.module.scss';
 import { RotateCw, Pencil, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button/Button';
+
+import type { FormEvent } from 'react';
+
+import style from './AddSectionModal.module.scss';
+import commonStyle from './CommonModal.module.scss';
 
 interface FieldOption {
     id: string;
@@ -40,16 +43,18 @@ export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
     const idCounterRef = useRef(1);
     const genId = (prefix = 'id') => `${prefix}_${idCounterRef.current++}`;
 
+    const initialFields = [
+        { name: 'Название', type: 'text' as const },
+        { name: 'Описание', type: 'textarea' as const },
+        { name: 'Фото', type: 'file' as const },
+        { name: 'Вес', type: 'number' as const },
+        { name: 'Ккал', type: 'number' as const },
+        { name: 'Цена', type: 'number' as const },
+    ];
+
     const [sectionName, setSectionName] = useState('');
     const [sectionSlug, setSectionSlug] = useState('');
-    const [fields, setFields] = useState<Field[]>([
-        { id: genId('field'), name: 'Название', type: 'text' },
-        { id: genId('field'), name: 'Описание', type: 'textarea' },
-        { id: genId('field'), name: 'Фото', type: 'file' },
-        { id: genId('field'), name: 'Вес', type: 'number' },
-        { id: genId('field'), name: 'Ккал', type: 'number' },
-        { id: genId('field'), name: 'Цена', type: 'number' },
-    ]);
+    const [fields, setFields] = useState<Field[]>(initialFields.map(f => ({ ...f, id: genId('field') })));
 
     // Оставляем состояние options как в оригинале — массив опций (глобально)
     const [options, setOptions] = useState<FieldOption[]>([
@@ -113,18 +118,27 @@ export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
         });
     };
 
+    const handleClear = () => {
+        setSectionName('');
+        setSectionSlug('');
+        setFields(prev => prev.map((f, i) => ({ ...f, name: initialFields[i].name })));
+        setEditableMap({});
+        setOptions([]);
+    };
+
     return (
-        <form className={style.form} onSubmit={handleSubmit}>
-            <h2>Добавить раздел</h2>
+        <form className={commonStyle.form} onSubmit={handleSubmit}>
+            <h2 className={commonStyle.title}>Добавить раздел</h2>
 
             <div className={style.sectionFields}>
-                <div className={style.field}>
+                <div className={commonStyle.field}>
                     <Input placeholder="Название" value={sectionName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSectionName(e.target.value)} />
                 </div>
 
-                <div className={style.field}>
+                <div className={commonStyle.field}>
                     <Input placeholder="slug" value={sectionSlug} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSectionSlug(e.target.value)} />
                     <RotateCw
+                        className={commonStyle.fieldIcon}
                         size={22}
                         aria-label="regen-slug"
                         onClick={() => {
@@ -135,17 +149,21 @@ export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
                 </div>
             </div>
 
-            <h3>Заголовки полей элементов</h3>
+            <h3 className={commonStyle.title}>Заголовки полей элементов</h3>
 
             <div className={style.fields}>
                 {fields.map(field => (
-                    <div key={field.id} className={style.field}>
+                    <div key={field.id} className={commonStyle.field}>
                         <Input value={field.name} disabled={!editableMap[field.id]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFieldName(field.id, e.target.value)} />
-                        {editableMap[field.id] ? <Save size={22} onClick={() => toggleEditable(field.id)} /> : <Pencil size={20} onClick={() => toggleEditable(field.id)} />}
+                        {editableMap[field.id] ? (
+                            <Save className={commonStyle.fieldIcon} size={22} onClick={() => toggleEditable(field.id)} />
+                        ) : (
+                            <Pencil className={commonStyle.fieldIcon} size={20} onClick={() => toggleEditable(field.id)} />
+                        )}
                     </div>
                 ))}
 
-                <h3 className={style.optionsTitle}>Варианты</h3>
+                <h3 className={commonStyle.title}>Варианты</h3>
                 <div className={style.options}>
                     {options.map(opt => (
                         <div key={opt.id} className={style.option}>
@@ -165,10 +183,14 @@ export default function AddSectionModal({ onSubmit }: AddSectionModalProps) {
                     </span>
                 </div>
             </div>
-
-            <Button className={style.submitBtn} type="submit" size="md" variant="primary">
-                Сохранить раздел
-            </Button>
+            <div className={commonStyle.footer}>
+                <Button size="md" type="button" variant="secondary" onClick={handleClear}>
+                    Очистить всё
+                </Button>
+                <Button className={style.submitBtn} type="submit" size="md" variant="primary">
+                    Сохранить раздел
+                </Button>
+            </div>
         </form>
     );
 }

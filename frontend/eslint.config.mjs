@@ -38,7 +38,6 @@ const eslintConfig = [
             '@typescript-eslint/no-empty-interface': 'warn',
             '@typescript-eslint/explicit-module-boundary-types': 'off',
             '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
-            '@next/next/no-img-element': 'warn',
             '@next/next/no-html-link-for-pages': 'warn',
             semi: ['error', 'always'],
             quotes: ['error', 'single'],
