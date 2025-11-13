@@ -28,3 +28,20 @@
     gap: 15px;
     grid-template-columns: 1fr 1fr 1fr;
 }
+.preview {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+.viewVariant {
+    margin-bottom: 10px;
+
+    h4 {
+        margin: 0 0 5px;
+    }
+
+    p {
+        margin: 0 0 5px;
+    }
+}
