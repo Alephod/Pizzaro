@@ -6,6 +6,7 @@
     height: 100svh;
     position: relative;
     display: flex;
+    flex-shrink: 0;
     z-index: 3;
     flex-direction: column;
     width: 270px;
