@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import DashboardAside from './DashboardAside';
 
-export default async function Adminayout({
+export default async function AdminLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
