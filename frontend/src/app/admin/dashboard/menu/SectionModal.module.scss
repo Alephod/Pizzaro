@@ -38,9 +38,17 @@
     box-sizing: content-box;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-    &:focus-within {
+    &:not(.optionError):focus-within {
         border: 1.5px solid var(--primary);
         box-shadow: 0 0 4px 0 #fe782b;
+    }
+}
+
+.optionError {
+    border-color: var(--danger);
+    &:focus-within {
+        border: 1.5px solid var(--danger);
+        box-shadow: 0 0 4px 0 var(--danger);
     }
 }
 

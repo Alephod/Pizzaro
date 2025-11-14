@@ -24,6 +24,12 @@
     border-color: var(--danger);
 
     &:focus {
-        box-shadow: 0 0 0 4px var(--danger);
+        border: 1.5px solid var(--danger);
+        box-shadow: 0 0 4px var(--danger);
     }
+}
+.errorMessage {
+    font-size: 14px;
+    color: var(--danger);
+    margin-top: 5px;
 }

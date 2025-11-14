@@ -1,9 +1,7 @@
 'use client';
-
 import clsx from 'clsx';
 import style from './Textarea.module.scss';
 import type { ChangeEvent, TextareaHTMLAttributes } from 'react';
-
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
     value: string;
     onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
@@ -12,19 +10,24 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
     cols?: number;
     disabled?: boolean;
     className?: string;
+    error?: boolean;
+    errorMessage?: string;
 }
-
-export default function Textarea({ value, onChange, placeholder = '', rows = 4, cols, disabled = false, className, ...rest }: TextareaProps) {
+export default function Textarea({ value, onChange, placeholder = '', rows = 4, cols, disabled = false, className, error = false, errorMessage, ...rest }: TextareaProps) {
+    const textareaClass = clsx(style.textarea, className, disabled && style.disabled, error && style.error);
     return (
-        <textarea
-            className={clsx(style.textarea, className, disabled && style.disabled)}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            rows={rows}
-            cols={cols}
-            disabled={disabled}
-            {...rest}
-        />
+        <div className={style.wrapper}>
+            <textarea
+                className={textareaClass}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                rows={rows}
+                cols={cols}
+                disabled={disabled}
+                {...rest}
+            />
+            {errorMessage && <div className={style.errorMessage}>{errorMessage}</div>}
+        </div>
     );
 }
