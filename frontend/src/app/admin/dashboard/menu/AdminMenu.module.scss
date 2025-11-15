@@ -82,6 +82,7 @@
 
 .sectionTitle {
     margin-bottom: 0;
+    cursor: pointer;
 }
 
 .toggleArrow {
@@ -126,7 +127,7 @@
     container-type: inline-size;
     container-name: products-wrapper;
 
-    .products:not(:has-child) {
+    &:not(:has(.products > *)) {
         margin-top: 0;
     }
 

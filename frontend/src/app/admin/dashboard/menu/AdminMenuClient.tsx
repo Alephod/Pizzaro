@@ -235,7 +235,9 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                 <React.Fragment key={section.id}>
                                     <div className={style.sectionWrapper}>
                                         <div className={style.sectionHeader}>
-                                            <h2 className={style.sectionTitle}>{section.name}</h2>
+                                            <h2 onClick={() => toggleSectionCollapse(section.id)} className={style.sectionTitle}>
+                                                {section.name}
+                                            </h2>
                                             <button className={clsx(style.toggleArrow, { [style.expanded]: !isCollapsed })} onClick={() => toggleSectionCollapse(section.id)}>
                                                 <svg width="18" height="9" viewBox="0 0 18 9" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M1 7.25012L8.79487 1.25012L17 7.25012" stroke="black" strokeWidth="2" strokeLinecap="round" />
@@ -267,7 +269,8 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                             </div>
                                         </div>
                                     </div>
-                                    {isEditing && (
+
+                                    {isEditing ? (
                                         <div className={style.addSection}>
                                             <Button
                                                 size="sm"
@@ -278,6 +281,8 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                                 <Plus size={16} /> Добавить раздел
                                             </Button>
                                         </div>
+                                    ) : (
+                                        index !== sections.length - 1 && <div className={style.addSection}></div>
                                     )}
                                 </React.Fragment>
                             );
