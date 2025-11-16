@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { Input } from '@/components/ui/Input/Input';
-import { Button } from '@/components/ui/Button/Button';
+import { Input } from '@/components/ui/input/Input';
+import { Button } from '@/components/ui/button/Button';
 import style from './page.module.scss';
 
 export function AdminLoginForm() {
