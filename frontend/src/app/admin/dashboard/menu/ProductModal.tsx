@@ -7,7 +7,7 @@ import TextArea from '@/components/ui/textarea/Textarea';
 import PhotoUpload from '@/components/ui/photo-upload/PhotoUpload';
 import { Button } from '@/components/ui/button/Button';
 import RadioButton from '../../../../components/ui/radio-button/RadioButton';
-import type { MenuSection, ItemVariant } from './AdminMenuClient';
+import type { MenuSection, ItemVariant } from '@/types/menu';
 import style from './ProductModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
 export interface ItemData {
@@ -21,7 +21,7 @@ interface AddProductModalProps {
     section: MenuSection;
     mode: 'edit' | 'add' | 'view';
     itemData?: Partial<ItemData> | ItemData;
-    onSubmit: (data: ItemData) => void;
+    onSubmit?: (data: ItemData) => void;
 }
 export default function ProductModal({ section, onSubmit, mode, itemData }: AddProductModalProps) {
     const options = useMemo<string[]>(() => (Array.isArray(section?.schema?.options) ? section.schema.options : []), [section]);
@@ -72,9 +72,27 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
         const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
         return `${base.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
     };
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Сбрасываем ошибку фото заранее
+        setErrors(prev => ({ ...prev, photo: undefined }));
+
+        // Попытка upload -> устанавливаем returned URL в photo
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const json = await res.json();
+            if (res.ok && json && typeof json.url === 'string' && json.url.length) {
+                setPhoto(json.url);
+                return;
+            }
+        } catch {}
+
+        // Если загрузка не удалась — fallback: показываем data URL как раньше
         const reader = new FileReader();
         reader.onload = () => {
             setPhoto(reader.result as string);
@@ -82,6 +100,7 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
         };
         reader.readAsDataURL(file);
     };
+
     const handleDeletePhoto = () => {
         setPhoto('');
     };
@@ -190,7 +209,8 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
                 cost: variantValues[opt]?.cost ?? '',
             })) as ItemVariant[],
         };
-        onSubmit(formData);
+
+        onSubmit?.(formData);
     };
     const handleKkalChange = (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
@@ -246,7 +266,6 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
                         onDelete={isReadOnly ? undefined : handleDeletePhoto}
                         disabled={isReadOnly}
                         error={!!errors.photo}
-                        errorMessage={errors.photo}
                     />
                 </div>
             </div>

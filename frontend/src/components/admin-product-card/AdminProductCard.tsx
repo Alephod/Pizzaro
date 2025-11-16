@@ -1,7 +1,8 @@
-import type { Product } from '@/app/admin/dashboard/menu/AdminMenuClient';
-import styles from './AdminProductCard.module.scss';
+import type { Product } from '@/types/menu';
+import style from './AdminProductCard.module.scss';
 import { Edit, Trash2 } from 'lucide-react';
 import React from 'react';
+import Image from 'next/image';
 
 interface AdminProductCardProps {
     item: Product;
@@ -27,21 +28,21 @@ export default function AdminProductCard({ item, isEditing, onEdit, onDelete, on
     const imageSrc = resolveImageSrc(item.imageUrl ?? '');
 
     return (
-        <div className={styles.card}>
-            <img src={imageSrc} alt={item.name} className={styles.image} />
-            <div className={styles.content}>
-                <h3 className={styles.name} onClick={!isEditing ? onView : undefined} style={{ cursor: !isEditing ? 'pointer' : 'default' }}>
+        <div className={style.card}>
+            <Image width={130} height={130} src={imageSrc} alt={item.name} className={style.image} />
+            <div className={style.content}>
+                <h3 className={style.name} onClick={!isEditing ? onView : undefined} style={{ cursor: !isEditing ? 'pointer' : 'default' }}>
                     {item.name}
                 </h3>
-                {item.description ? <p className={styles.description}>{item.description}</p> : null}
-                {minCost !== null && <p className={styles.price}>от {minCost}р</p>}
+                {item.description ? <p className={style.description}>{item.description}</p> : null}
+                {minCost !== null && <p className={style.price}>от {minCost}р</p>}
             </div>
             {isEditing && (
-                <div className={styles.buttons}>
+                <div className={style.buttons}>
                     <button onClick={onEdit} aria-label="Edit" type="button">
                         <Edit size={20} />
                     </button>
-                    <button onClick={onDelete} aria-label="Delete" type="button">
+                    <button onClick={onDelete} className={style.deleteBtn} aria-label="Delete" type="button">
                         <Trash2 size={20} />
                     </button>
                 </div>

@@ -4,6 +4,7 @@ import style from './PhotoUpload.module.scss';
 import { Upload, Trash, Pencil } from 'lucide-react';
 import { useRef } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
+import Image from 'next/image';
 interface PhotoUploadProps {
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     label?: string;
@@ -13,9 +14,8 @@ interface PhotoUploadProps {
     preview?: string | null;
     onDelete?: () => void;
     error?: boolean;
-    errorMessage?: string;
 }
-export default function PhotoUpload({ onChange, label = 'Загрузите фото', accept = 'image/*', disabled = false, className, preview, onDelete, error = false, errorMessage }: PhotoUploadProps) {
+export default function PhotoUpload({ onChange, label = 'Загрузите фото', accept = 'image/*', disabled = false, className, preview, onDelete, error = false }: PhotoUploadProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const handleDelete = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -43,7 +43,7 @@ export default function PhotoUpload({ onChange, label = 'Загрузите фо
             >
                 {preview ? (
                     <div className={style.previewWrapper}>
-                        <img src={preview} alt="Preview" className={style.preview} />
+                        <Image fill src={preview} alt="Preview" className={style.preview} />
                         <div className={style.overlay} />
                         {!disabled && (
                             <div className={style.actions}>

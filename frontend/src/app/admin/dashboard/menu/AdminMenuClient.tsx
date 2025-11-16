@@ -7,49 +7,10 @@ import ProductModal from './ProductModal';
 import AdminProductCard from '@/components/admin-product-card/AdminProductCard';
 import style from './AdminMenu.module.scss';
 import { Button } from '@/components/ui/button/Button';
-import { ChevronRight, Edit, Pencil, Plus, Save, X } from 'lucide-react';
+import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import React from 'react';
-
-export interface ItemVariant {
-    name: string;
-    weight: string;
-    kkal: string;
-    cost: string;
-}
-
-export interface Product {
-    id: number;
-    sectionId: number;
-    name: string;
-    description?: string;
-    imageUrl: string;
-    order?: number;
-    data: ItemVariant[];
-    createdAt: string;
-    updatedAt: string;
-}
-
-export type SectionSchema = {
-    options: string[];
-};
-
-export interface SectionFormData {
-    name: string;
-    slug: string;
-    schema: SectionSchema | null;
-}
-
-export interface MenuSection {
-    id: number;
-    name: string;
-    slug: string;
-    schema: SectionSchema | null;
-    order: number;
-    items: Product[];
-    createdAt: string;
-    updatedAt: string;
-}
+import type { MenuSection, SectionData, SectionSchema, Product, ItemVariant } from '@/types/menu';
 
 interface Props {
     sectionsData: MenuSection[];
@@ -57,39 +18,288 @@ interface Props {
 
 export default function AdminMenuClient({ sectionsData }: Props) {
     const { openModal, closeModal } = useContext(ModalContext);
+
     const [sections, setSections] = useState<MenuSection[]>(sectionsData);
     const [isEditing, setIsEditing] = useState(false);
     const [backupSections, setBackupSections] = useState<MenuSection[] | null>(null);
     const [collapsedSectionIds, setCollapsedSectionIds] = useState<Set<number>>(new Set());
+
+    // pending queues
+    const [pendingSectionsCreate, setPendingSectionsCreate] = useState<MenuSection[]>([]);
+    const [pendingSectionsUpdate, setPendingSectionsUpdate] = useState<Record<number, SectionData>>({});
+    const [pendingSectionsDeleteIds, setPendingSectionsDeleteIds] = useState<number[]>([]);
+
+    const [pendingProductsCreate, setPendingProductsCreate] = useState<Product[]>([]);
+    const [pendingProductsUpdate, setPendingProductsUpdate] = useState<Record<number, Partial<Product>>>({});
+    const [pendingProductsDeleteIds, setPendingProductsDeleteIds] = useState<number[]>([]);
 
     const startEditing = () => {
         setBackupSections(JSON.parse(JSON.stringify(sections)));
         setIsEditing(true);
     };
 
-    const saveChanges = () => {
-        // Здесь можно добавить вызов API для сохранения на сервер, например:
-        // fetch('/api/menu', { method: 'POST', body: JSON.stringify(sections) });
-        console.log('Сохранение изменений:', sections);
-        setIsEditing(false);
-        setBackupSections(null);
+    // -----------------------
+    // helpers for errors & modals
+    // -----------------------
+    function getErrorMessage(err: unknown) {
+        return err instanceof Error ? err.message : String(err);
+    }
+
+    function InfoContent({ title, message, onClose }: { title?: string; message: string; onClose: () => void }) {
+        return (
+            <div className={style.infoModal}>
+                {title && <h3 className={style.infoTitle}>{title}</h3>}
+                <div className={style.infoMessage}>{message}</div>
+                <div className={style.infoActions}>
+                    <Button
+                        size="md"
+                        variant="primary"
+                        className={style.infoModalBtn}
+                        onClick={() => {
+                            onClose();
+                        }}
+                    >
+                        OK
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    function showInfo(message: string, title?: string): Promise<void> {
+        return new Promise(resolve => {
+            const handleClose = () => {
+                closeModal();
+                resolve();
+            };
+            openModal(<InfoContent title={title} message={message} onClose={handleClose} />);
+        });
+    }
+
+    // helper: upload data URL if needed -> returns relative URL or original
+    async function uploadDataUrlIfNeeded(maybeDataUrl: string): Promise<string> {
+        if (!maybeDataUrl) return '';
+        const val = maybeDataUrl.trim();
+        if (!val) return '';
+        if (val.startsWith('/temp-uploads/') || val.startsWith('/uploads/') || val.startsWith('/')) return val;
+        if (val.startsWith('http://') || val.startsWith('https://')) return val;
+        if (val.startsWith('data:')) {
+            try {
+                const res = await fetch(val);
+                const blob = await res.blob();
+                const ext = (blob.type && blob.type.split('/')[1]) || 'png';
+                const fileName = `upload-${Date.now()}.${ext}`;
+                const file = new File([blob], fileName, { type: blob.type });
+                const fd = new FormData();
+                fd.append('file', file);
+                const upl = await fetch('/api/upload', { method: 'POST', body: fd });
+                if (!upl.ok) throw new Error('Upload failed');
+                const json = await upl.json();
+                if (json && typeof json.url === 'string') return json.url;
+                return '';
+            } catch (err) {
+                void showInfo(`Ошибка при загрузке изображения: ${getErrorMessage(err)}`, 'Ошибка');
+                return '';
+            }
+        }
+        return val;
+    }
+
+    // API helpers
+    async function createSectionApi(payload: { name: string; slug: string; schema: SectionSchema; order?: number }) {
+        const res = await fetch('/api/menu-section', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to create section');
+        return (await res.json()) as MenuSection;
+    }
+
+    async function updateSectionApi(id: number, payload: { name: string; slug: string; schema: SectionSchema; order?: number }) {
+        const res = await fetch(`/api/menu-section/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to update section');
+        return (await res.json()) as MenuSection;
+    }
+
+    async function deleteSectionApi(id: number) {
+        const res = await fetch(`/api/menu-section/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete section');
+        return res.json();
+    }
+
+    async function createProductApi(payload: { sectionId: number; name: string; description: string; imageUrl: string; data: ItemVariant[] | Record<string, unknown>; order?: number | null }) {
+        const res = await fetch('/api/menu-product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to create product');
+        return (await res.json()) as Product;
+    }
+
+    async function updateProductApi(id: number, payload: { name: string; description: string; imageUrl: string; data: ItemVariant[] | Record<string, unknown>; order?: number | null }) {
+        const res = await fetch(`/api/menu-product/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to update product');
+        return (await res.json()) as Product;
+    }
+
+    async function deleteProductApi(id: number) {
+        const res = await fetch(`/api/menu-product/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete product');
+        return res.json();
+    }
+
+    const saveChanges = async () => {
+        try {
+            const tempToReal = new Map<number, number>();
+
+            // 1) create sections
+            for (const sec of pendingSectionsCreate) {
+                const payload = { name: sec.name, slug: sec.slug, schema: sec.schema ?? { options: [] }, order: sec.order ?? sec.order ?? 999 };
+                const created = await createSectionApi(payload);
+                tempToReal.set(sec.id, created.id);
+                // replace in local state
+                setSections(prev => prev.map(s => (s.id === sec.id ? { ...s, id: created.id, createdAt: created.createdAt, updatedAt: created.updatedAt } : s)));
+            }
+
+            // 2) update sections
+            const updateSecIds = Object.keys(pendingSectionsUpdate).map(k => parseInt(k, 10));
+            for (const id of updateSecIds) {
+                const payload = pendingSectionsUpdate[id];
+                const updated = await updateSectionApi(id, {
+                    name: payload.name,
+                    slug: payload.slug,
+                    schema: payload.schema ?? { options: [] },
+                    order: payload.order,
+                });
+                setSections(prev => prev.map(s => (s.id === updated.id ? { ...s, ...updated } : s)));
+            }
+
+            // 3) delete sections
+            for (const id of pendingSectionsDeleteIds) {
+                await deleteSectionApi(id);
+                setSections(prev => prev.filter(s => s.id !== id));
+            }
+
+            // 4) create products
+            for (const p of pendingProductsCreate) {
+                const realSectionId = tempToReal.get(p.sectionId) ?? p.sectionId;
+                const imageUrl = await uploadDataUrlIfNeeded(p.imageUrl ?? '');
+                const created = await createProductApi({
+                    sectionId: realSectionId,
+                    name: p.name,
+                    description: p.description ?? '',
+                    imageUrl,
+                    data: p.data ?? [],
+                    order: p.order ?? 999,
+                });
+                // replace temp product in state
+                setSections(prev =>
+                    prev.map(s =>
+                        s.id === realSectionId
+                            ? {
+                                  ...s,
+                                  items: [...(s.items ?? []).filter(i => i.id !== p.id), created],
+                              }
+                            : s
+                    )
+                );
+            }
+
+            // 5) update products
+            const updateProdIds = Object.keys(pendingProductsUpdate).map(k => parseInt(k, 10));
+            for (const id of updateProdIds) {
+                const upd = pendingProductsUpdate[id];
+                const imageUrl = upd.imageUrl ? await uploadDataUrlIfNeeded(upd.imageUrl as string) : (upd.imageUrl as string | undefined) ?? '';
+                const updated = await updateProductApi(id, {
+                    name: (upd.name as string) ?? '',
+                    description: (upd.description as string) ?? '',
+                    imageUrl,
+                    data: (upd.data as ItemVariant[]) ?? [],
+                    order: upd.order ?? undefined,
+                });
+                setSections(prev => prev.map(s => (s.id === updated.sectionId ? { ...s, items: s.items.map(i => (i.id === updated.id ? updated : i)) } : s)));
+            }
+
+            // 6) delete products
+            for (const id of pendingProductsDeleteIds) {
+                await deleteProductApi(id);
+                setSections(prev => prev.map(s => ({ ...s, items: s.items.filter(i => i.id !== id) })));
+            }
+
+            // cleaning temp dir
+            try {
+                const res = await fetch('/api/cleanup-temp', { method: 'POST' });
+                if (!res.ok) {
+                    const txt = await res.text().catch(() => 'unknown');
+                    void showInfo(`Не удалось очистить временные файлы: ${txt}`, 'Внимание');
+                } else {
+                }
+            } catch (err) {
+                void showInfo(`Ошибка при очистке временных файлов: ${getErrorMessage(err)}`, 'Внимание');
+            }
+
+            // clear pending
+            setPendingSectionsCreate([]);
+            setPendingSectionsUpdate({});
+            setPendingSectionsDeleteIds([]);
+            setPendingProductsCreate([]);
+            setPendingProductsUpdate({});
+            setPendingProductsDeleteIds([]);
+
+            // finish editing
+            setIsEditing(false);
+            setBackupSections(null);
+
+            // show success modal
+            await showInfo('Изменения успешно сохранены', 'Готово');
+        } catch (err) {
+            await showInfo(`Ошибка при сохранении: ${getErrorMessage(err)}`, 'Ошибка');
+        }
     };
 
-    const cancelChanges = () => {
+    const cancelChanges = async () => {
         if (backupSections) {
             setSections(JSON.parse(JSON.stringify(backupSections)));
         }
+
+        try {
+            const res = await fetch('/api/cleanup-temp', { method: 'POST' });
+            if (!res.ok) {
+                const txt = await res.text().catch(() => 'unknown');
+                void showInfo(`Не удалось очистить временные файлы: ${txt}`, 'Внимание');
+            } else {
+                // ok
+            }
+        } catch (err) {
+            void showInfo(`Ошибка при очистке временных файлов: ${getErrorMessage(err)}`, 'Внимание');
+        }
+
+        // clear pending
+        setPendingSectionsCreate([]);
+        setPendingSectionsUpdate({});
+        setPendingSectionsDeleteIds([]);
+        setPendingProductsCreate([]);
+        setPendingProductsUpdate({});
+        setPendingProductsDeleteIds([]);
+
         setIsEditing(false);
         setBackupSections(null);
     };
 
     const toggleSectionCollapse = (sectionId: number) => {
         const newCollapsedIds = new Set(collapsedSectionIds);
-        if (newCollapsedIds.has(sectionId)) {
-            newCollapsedIds.delete(sectionId);
-        } else {
-            newCollapsedIds.add(sectionId);
-        }
+        if (newCollapsedIds.has(sectionId)) newCollapsedIds.delete(sectionId);
+        else newCollapsedIds.add(sectionId);
         setCollapsedSectionIds(newCollapsedIds);
     };
 
@@ -98,7 +308,7 @@ export default function AdminMenuClient({ sectionsData }: Props) {
             <SectionModal
                 mode={mode}
                 initialData={section ? { name: section.name, slug: section.slug, schema: section.schema ?? { options: [] } } : undefined}
-                onSubmit={(data: SectionFormData) => {
+                onSubmit={(data: SectionData) => {
                     const now = new Date().toISOString();
                     if (mode === 'add') {
                         const newSection: MenuSection = {
@@ -107,17 +317,22 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                             items: [],
                             createdAt: now,
                             updatedAt: now,
-                            order: 0, // Временное значение, будет обновлено ниже
+                            order: 0,
                         };
                         setSections(prev => {
                             const updatedSections = [...prev];
                             const effectiveInsertIndex = insertIndex ?? updatedSections.length;
                             updatedSections.splice(effectiveInsertIndex, 0, newSection);
-                            // Обновляем order для всех секций на основе их позиции в массиве
                             return updatedSections.map((sec, idx) => ({ ...sec, order: idx }));
                         });
+                        setPendingSectionsCreate(prev => [...prev, newSection]);
                     } else if (mode === 'edit' && section) {
                         setSections(prev => prev.map(s => (s.id === section.id ? { ...s, ...data, updatedAt: now } : s)));
+                        if (pendingSectionsCreate.some(p => p.id === section.id)) {
+                            setPendingSectionsCreate(prev => prev.map(p => (p.id === section.id ? { ...p, ...data, updatedAt: now } : p)));
+                        } else {
+                            setPendingSectionsUpdate(prev => ({ ...prev, [section.id]: data }));
+                        }
                     }
                     closeModal();
                 }}
@@ -151,7 +366,8 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                         createdAt: now,
                         updatedAt: now,
                     };
-                    setSections(prev => prev.map(s => (s.id === section.id ? { ...s, items: [...s.items, newItem] } : s)));
+                    setSections(prev => prev.map(s => (s.id === section.id ? { ...s, items: [...(s.items ?? []), newItem] } : s)));
+                    setPendingProductsCreate(prev => [...prev, newItem]);
                     closeModal();
                 }}
             />
@@ -176,6 +392,12 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                         updatedAt: now,
                     };
                     setSections(prev => prev.map(s => (s.id === section.id ? { ...s, items: s.items.map(i => (i.id === item.id ? updatedItem : i)) } : s)));
+
+                    if (pendingProductsCreate.some(p => p.id === item.id)) {
+                        setPendingProductsCreate(prev => prev.map(p => (p.id === item.id ? updatedItem : p)));
+                    } else {
+                        setPendingProductsUpdate(prev => ({ ...prev, [item.id]: updatedItem }));
+                    }
                     closeModal();
                 }}
             />
@@ -183,12 +405,49 @@ export default function AdminMenuClient({ sectionsData }: Props) {
     };
 
     const handleViewItem = (section: MenuSection, item: Product) => {
-        openModal(<ProductModal section={section} mode="view" itemData={itemToFormData(item)} onSubmit={() => {}} />);
+        openModal(<ProductModal section={section} mode="view" itemData={itemToFormData(item)} />);
     };
 
     const handleDeleteItem = (sectionId: number, itemId: number) => {
         setSections(prev => prev.map(s => (s.id === sectionId ? { ...s, items: s.items.filter(i => i.id !== itemId) } : s)));
+
+        if (pendingProductsCreate.some(p => p.id === itemId)) {
+            setPendingProductsCreate(prev => prev.filter(p => p.id !== itemId));
+        } else {
+            setPendingProductsDeleteIds(prev => Array.from(new Set([...prev, itemId])));
+            setPendingProductsUpdate(prev => {
+                const copy = { ...prev };
+                delete copy[itemId];
+                return copy;
+            });
+        }
     };
+
+    async function handleDeleteSection(sectionId: number) {
+        setSections(prev => prev.filter(s => s.id !== sectionId));
+
+        if (pendingSectionsCreate.some(s => s.id === sectionId)) {
+            setPendingSectionsCreate(prev => prev.filter(s => s.id !== sectionId));
+        } else {
+            setPendingSectionsDeleteIds(prev => Array.from(new Set([...prev, sectionId])));
+            setPendingSectionsUpdate(prev => {
+                const copy = { ...prev };
+                delete copy[sectionId];
+                return copy;
+            });
+        }
+
+        setPendingProductsCreate(prev => prev.filter(p => p.sectionId !== sectionId));
+        setPendingProductsUpdate(prev => {
+            const copy = { ...prev };
+            for (const key of Object.keys(copy)) {
+                const pid = parseInt(key, 10);
+                const maybe = copy[pid] as Partial<Product> | undefined;
+                if (maybe && maybe.sectionId === sectionId) delete copy[pid];
+            }
+            return copy;
+        });
+    }
 
     return (
         <main className={clsx('container', style.main)}>
@@ -210,6 +469,7 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                         </Button>
                     )}
                 </div>
+
                 {sections.length === 0 ? (
                     !isEditing ? (
                         <div className={style.noSections}>Нет разделов в меню</div>
@@ -229,6 +489,7 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                 </Button>
                             </div>
                         )}
+
                         {sections.map((section, index) => {
                             const isCollapsed = collapsedSectionIds.has(section.id);
                             return (
@@ -244,11 +505,22 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                                 </svg>
                                             </button>
                                             {isEditing && (
-                                                <span className={style.sectionEdit} onClick={() => handleOpenSectionModal('edit', section)}>
-                                                    <Pencil size={20} /> Редактировать
-                                                </span>
+                                                <div className={style.sectionActions}>
+                                                    <span className={style.sectionEdit} onClick={() => handleOpenSectionModal('edit', section)}>
+                                                        <Pencil size={20} /> Редактировать
+                                                    </span>
+                                                    <span
+                                                        className={style.sectionDelete}
+                                                        onClick={async () => {
+                                                            void handleDeleteSection(section.id);
+                                                        }}
+                                                    >
+                                                        <Trash2 size={20} /> Удалить
+                                                    </span>
+                                                </div>
                                             )}
                                         </div>
+
                                         <div className={clsx(style.productsWrapper, { [style.collapsed]: isCollapsed })}>
                                             <div className={style.products}>
                                                 {section.items.map(item => (
@@ -261,6 +533,7 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                                                         onView={!isEditing ? () => handleViewItem(section, item) : undefined}
                                                     />
                                                 ))}
+
                                                 {isEditing && (
                                                     <div className={style.addProduct} onClick={() => handleAddItem(section)}>
                                                         <Plus size={34} /> Добавить

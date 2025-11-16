@@ -8,18 +8,11 @@ import type { FormEvent } from 'react';
 import style from './SectionModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
 import clsx from 'clsx';
+import type { SectionData } from '@/types/menu';
 
 interface OptionField {
     id: string;
     value: string;
-}
-
-export interface SectionData {
-    name: string;
-    slug: string;
-    schema: {
-        options: string[];
-    };
 }
 
 interface SectionModalProps {
@@ -150,6 +143,7 @@ export default function SectionModal({ mode, initialData, onSubmit }: SectionMod
             setTimeout(focusOnFirstError, 0);
             return;
         }
+
         onSubmit({
             name: sectionName.trim(),
             slug: sectionSlug.trim(),

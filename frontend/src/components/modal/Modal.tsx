@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode, MouseEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import style from './Modal.module.scss';
 
@@ -20,6 +20,16 @@ export default function Modal({ isOpen, onClose, children, className, zIndex = 1
     const contentRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
     const [isClosing, setIsClosing] = useState(false);
+
+    // Запустить анимацию закрытия и уведомить провайдера (onClose)
+    const startClose = useCallback(() => {
+        if (isClosing) return;
+        setIsClosing(true);
+
+        contentRef.current?.classList.add(style.closing);
+        backdropRef.current?.classList.add(style.backdropClosing);
+        onClose();
+    }, [isClosing, onClose]);
 
     // Закрытие по Escape и popstate
     useEffect(() => {
@@ -42,7 +52,7 @@ export default function Modal({ isOpen, onClose, children, className, zIndex = 1
             document.removeEventListener('keydown', handleEsc);
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isOpen]);
+    }, [isOpen, startClose]);
 
     // Блокировка скролла body
     useEffect(() => {
@@ -86,16 +96,6 @@ export default function Modal({ isOpen, onClose, children, className, zIndex = 1
     // Начало нажатия на бэкдроп
     const handleBackdropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         pointerDownOnBackdropRef.current = e.target === e.currentTarget;
-    };
-
-    // Запустить анимацию закрытия и уведомить провайдера (onClose)
-    const startClose = () => {
-        if (isClosing) return;
-        setIsClosing(true);
-
-        contentRef.current?.classList.add(style.closing);
-        backdropRef.current?.classList.add(style.backdropClosing);
-        onClose();
     };
 
     // Закрываем только если pointerdown тоже был на бэкдропе
