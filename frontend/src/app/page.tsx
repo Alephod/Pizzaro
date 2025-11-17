@@ -1,24 +1,11 @@
 import React from 'react';
 import styles from './Home.module.scss';
-import type { MenuSection, Product } from '../types/menu';
 import { ProductCard } from '@/components/product-card/ProductCard';
 import clsx from 'clsx';
-
-async function fetchMenuSections(): Promise<MenuSection[]> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/menu-section`, {
-        method: 'GET',
-        cache: 'no-store',
-    });
-
-    if (!res.ok) {
-        throw new Error(`Failed to fetch menu sections: ${res.status} ${res.statusText}`);
-    }
-
-    return (await res.json()) as MenuSection[];
-}
+import { getMenuSections } from '@/lib/fetchMenu';
 
 export default async function Home() {
-    const sections = await fetchMenuSections();
+    const sections = await getMenuSections();
     console.log(sections);
 
     return (
@@ -30,7 +17,7 @@ export default async function Home() {
             ) : (
                 sections.map(section =>
                     section.items.length !== 0 ? (
-                        <section key={section.id} className={styles.section}>
+                        <section key={section.id} id={`section-${section.slug}`} className={styles.section}>
                             <h2 className={styles.sectionTitle}>{section.name}</h2>
 
                             <div className={styles.grid}>
