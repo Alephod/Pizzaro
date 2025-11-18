@@ -3,15 +3,17 @@
 import type { FC, MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import style from './Checkbox.module.scss';
+import clsx from 'clsx';
 
 interface CheckboxProps {
     label?: string;
     isChecked: boolean;
     onToggle: () => void;
     isDisabled?: boolean;
+    className?: string;
 }
 
-const Checkbox: FC<CheckboxProps> = ({ label, isChecked, onToggle, isDisabled = false }) => {
+const Checkbox: FC<CheckboxProps> = ({ label, isChecked, onToggle, isDisabled = false, className }) => {
     const handleClick = (e: MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
         if (!isDisabled) {
@@ -22,7 +24,7 @@ const Checkbox: FC<CheckboxProps> = ({ label, isChecked, onToggle, isDisabled = 
     return (
         <div
             onClick={handleClick}
-            className={style.checkbox}
+            className={clsx(style.checkbox, className)}
             role="checkbox"
             aria-checked={isChecked}
             aria-disabled={isDisabled}

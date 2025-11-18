@@ -3,6 +3,7 @@ export interface ItemVariant {
     weight: string;
     kkal: string;
     cost: string;
+    addons: Addon[]; 
 }
 
 export interface Product {
@@ -20,11 +21,11 @@ export interface Product {
 export interface Addon {
     name: string;
     imageUrl: string;
+    cost: string; 
 }
 
 export type SectionSchema = {
-    options: string[];
-    addons: Addon[];
+    options: { name: string; addons: Addon[] }[]; 
 };
 
 export interface SectionData {

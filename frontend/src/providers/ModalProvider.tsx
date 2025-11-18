@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState, type ReactNode } from 'react';
-import Modal from '@/components/modal/Modal'; // Укажите правильный путь импорта к компоненту Modal
+import Modal from '@/components/modal/Modal'; 
 
 interface ModalContextType {
     openModal: (content: ReactNode) => void;
@@ -36,7 +36,7 @@ export default function ModalProvider({ children }: ModalProviderProps) {
                     key={index}
                     isOpen={true}
                     onClose={closeModal}
-                    zIndex={1000 + index * 10} // Увеличиваем z-index для каждой вложенной модалки
+                    zIndex={1000 + index * 10} 
                 >
                     {content}
                 </Modal>
