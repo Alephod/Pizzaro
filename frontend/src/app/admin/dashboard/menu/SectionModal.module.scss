@@ -67,3 +67,38 @@
     font-weight: 500;
     cursor: pointer;
 }
+
+.addonWrapper {
+    overflow-y: scroll;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.addonSelector {
+    max-width: 400px;
+}
+
+.addonItem {
+    border-radius: var(--border-radius);
+    border: 1px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 18px;
+    font-weight: 500;
+    justify-content: space-between;
+
+    & > div {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+}
+
+.addonItemSelected {
+    border: 1px solid var(--primary);
+}

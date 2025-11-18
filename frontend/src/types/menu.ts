@@ -17,14 +17,20 @@ export interface Product {
     updatedAt: string;
 }
 
+export interface Addon {
+    name: string;
+    imageUrl: string;
+}
+
 export type SectionSchema = {
     options: string[];
+    addons: Addon[];
 };
 
 export interface SectionData {
     name: string;
     slug: string;
-    schema: SectionSchema | null;
+    schema: SectionSchema;
     order?: number;
 }
 
@@ -32,7 +38,7 @@ export interface MenuSection {
     id: number;
     name: string;
     slug: string;
-    schema: SectionSchema | null;
+    schema: SectionSchema;
     order: number;
     items: Product[];
     createdAt: string;

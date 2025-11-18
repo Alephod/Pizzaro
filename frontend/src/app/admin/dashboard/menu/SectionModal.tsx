@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input/Input';
 import slugify from 'slugify';
 import { RotateCw } from 'lucide-react';
@@ -9,10 +9,18 @@ import style from './SectionModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
 import clsx from 'clsx';
 import type { SectionData } from '@/types/menu';
+import { ModalContext } from '@/providers/ModalProvider';
+import Image from 'next/image';
+import Checkbox from '@/components/ui/checkbox/Checkbox';
 
 interface OptionField {
     id: string;
     value: string;
+}
+
+interface Addon {
+    name: string;
+    imageUrl: string;
 }
 
 interface SectionModalProps {
@@ -23,9 +31,78 @@ interface SectionModalProps {
 
 type OptionErrors = Record<string, string>;
 
+const availableAddons: Addon[] = [
+    { name: 'Бекон', imageUrl: '/addons/bacon.png' },
+    { name: 'Голубой сыр', imageUrl: '/addons/blue-cheese.png' },
+    { name: 'Шампиньоны', imageUrl: '/addons/champignon.png' },
+    { name: 'Моцарелла', imageUrl: '/addons/mozz.png' },
+    { name: 'Томаты', imageUrl: '/addons/tomata.png' },
+    { name: 'Маринованные огурцы', imageUrl: '/addons/pickles.png' },
+    { name: 'Халапеньо', imageUrl: '/addons/jalapeno.png' },
+    { name: 'Курица', imageUrl: '/addons/chiken.png' },
+    { name: 'Чоризо', imageUrl: '/addons/chorizo.png' },
+    { name: 'Пепперони', imageUrl: '/addons/pepperoni.png' },
+    { name: 'Ветчина', imageUrl: '/addons/ham.png' },
+    { name: 'Сахар', imageUrl: '/addons/sugar.png' },
+    { name: 'Карамельный сироп', imageUrl: '/addons/caramel-syrup.png' },
+    { name: 'Кокосовый сироп', imageUrl: '/addons/coconut-syrup.png' },
+];
+
+interface AddonSelectorProps {
+    availableAddonsList: Addon[];
+    selectedAddonsList: Addon[];
+    onAddonsSelect: (selectedAddonsToAdd: Addon[]) => void;
+}
+
+export const AddonSelector: React.FC<AddonSelectorProps> = ({ availableAddonsList, selectedAddonsList, onAddonsSelect }) => {
+    const { closeModal } = useContext(ModalContext);
+    const [localSelectedAddons, setLocalSelectedAddons] = useState<Addon[]>([]);
+
+    const toggleAddon = (addon: Addon) => {
+        setLocalSelectedAddons(prev => (prev.some(item => item.name === addon.name) ? prev.filter(item => item.name !== addon.name) : [...prev, addon]));
+    };
+
+    const handleConfirm = () => {
+        onAddonsSelect(localSelectedAddons);
+        closeModal();
+    };
+
+    const availableToChoose = availableAddonsList.filter(addon => !selectedAddonsList.some(sel => sel.name === addon.name));
+
+    return (
+        <div className={clsx(commonStyle.form, style.addonSelector)}>
+            <h3 className={commonStyle.title}>Выберите добавки</h3>
+
+            <div className={style.addonWrapper}>
+                {availableToChoose.map(addon => {
+                    const isSelected = localSelectedAddons.some(item => item.name === addon.name);
+
+                    return (
+                        <div key={addon.name} className={clsx(style.addonItem, isSelected && style.addonItemSelected)} onClick={() => toggleAddon(addon)}>
+                            <div>
+                                <Image src={addon.imageUrl} alt={addon.name} width={50} height={50} />
+                                <span className={style.addonName}>{addon.name}</span>
+                            </div>
+
+                            <Checkbox isChecked={isSelected} onToggle={() => toggleAddon(addon)} />
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button size="md" variant="primary" onClick={handleConfirm} disabled={localSelectedAddons.length === 0}>
+                    Добавить выбранные
+                </Button>
+            </div>
+        </div>
+    );
+};
+
 export default function SectionModal({ mode, initialData, onSubmit }: SectionModalProps) {
+    const { openModal, closeModal } = useContext(ModalContext);
     const optionIdCounterRef = useRef(1);
-    const generateOptionId = (prefix = 'id') => `${prefix}_${optionIdCounterRef.current++}`;
+    const generateOptionId = (prefix: string = 'id') => `${prefix}_${optionIdCounterRef.current++}`;
     const [sectionName, setSectionName] = useState(initialData?.name ?? '');
     const [sectionSlug, setSectionSlug] = useState(initialData?.slug ?? '');
     const [isSlugManual, setIsSlugManual] = useState(false);
@@ -33,6 +110,7 @@ export default function SectionModal({ mode, initialData, onSubmit }: SectionMod
     const [optionFields, setOptionFields] = useState<OptionField[]>(initialOptions.map(value => ({ id: generateOptionId('opt'), value })));
     const [newlyAddedOptionId, setNewlyAddedOptionId] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<{ name?: string; slug?: string; options?: OptionErrors }>({});
+    const [selectedAddons, setSelectedAddons] = useState<Addon[]>(initialData?.schema?.addons ?? []);
 
     useEffect(() => {
         if (!isSlugManual) {
@@ -147,7 +225,7 @@ export default function SectionModal({ mode, initialData, onSubmit }: SectionMod
         onSubmit({
             name: sectionName.trim(),
             slug: sectionSlug.trim(),
-            schema: { options: optionFields.map(o => o.value.trim()) },
+            schema: { options: optionFields.map(o => o.value.trim()), addons: selectedAddons },
         });
     };
 
@@ -158,6 +236,19 @@ export default function SectionModal({ mode, initialData, onSubmit }: SectionMod
         setOptionFields([]);
         setValidationErrors({});
         setNewlyAddedOptionId(null);
+        setSelectedAddons([]);
+    };
+
+    const handleOpenAddonSelector = () => {
+        openModal(
+            <AddonSelector
+                availableAddonsList={availableAddons}
+                selectedAddonsList={selectedAddons}
+                onAddonsSelect={selectedAddonsToAdd => {
+                    setSelectedAddons(prev => [...prev, ...selectedAddonsToAdd]);
+                }}
+            />
+        );
     };
 
     return (
@@ -222,6 +313,21 @@ export default function SectionModal({ mode, initialData, onSubmit }: SectionMod
                         {Object.keys(validationErrors.options ?? {}).some(k => k !== '__global' && validationErrors.options?.[k]) && <div>Все варианты должны быть заполнены</div>}
                     </div>
                 )}
+            </div>
+            <h3 className={commonStyle.title}>Добавки</h3>
+            <div className={style.options}>
+                {selectedAddons.map(addon => (
+                    <div key={addon.name} className={style.option}>
+                        <img src={addon.imageUrl} alt={addon.name} width={30} />
+                        <span>{addon.name}</span>
+                        <button type="button" onClick={() => setSelectedAddons(prev => prev.filter(p => p.name !== addon.name))}>
+                            ✕
+                        </button>
+                    </div>
+                ))}
+                <span className={style.optionAdd} onClick={handleOpenAddonSelector}>
+                    + Добавить добавку
+                </span>
             </div>
             <div className={commonStyle.footer}>
                 {mode === 'add' && (

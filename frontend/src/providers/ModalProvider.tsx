@@ -1,52 +1,46 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { createContext, useState } from 'react';
-import Modal from '@/components/modal/Modal';
+import { createContext, useState, type ReactNode } from 'react';
+import Modal from '@/components/modal/Modal'; // Укажите правильный путь импорта к компоненту Modal
 
 interface ModalContextType {
     openModal: (content: ReactNode) => void;
     closeModal: () => void;
-    isOpen: boolean;
 }
+
+export const ModalContext = createContext<ModalContextType>({
+    openModal: () => {},
+    closeModal: () => {},
+});
 
 interface ModalProviderProps {
     children: ReactNode;
 }
 
-export const ModalContext = createContext<ModalContextType>({
-    openModal: () => {
-        throw new Error('openModal must be used within ModalProvider');
-    },
-    closeModal: () => {
-        throw new Error('closeModal must be used within ModalProvider');
-    },
-    isOpen: false,
-});
-
 export default function ModalProvider({ children }: ModalProviderProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [modalContent, setModalContent] = useState<ReactNode>(null);
+    const [modalStack, setModalStack] = useState<ReactNode[]>([]);
 
-    const openModal = (content: ReactNode) => {
-        setModalContent(content);
-        setIsOpen(true);
+    const openModal = (newContent: ReactNode) => {
+        setModalStack(previousStack => [...previousStack, newContent]);
     };
 
     const closeModal = () => {
-        // задержка должна совпадать с длительностью CSS closing animation (здесь 300ms)
-        setTimeout(() => {
-            setIsOpen(false);
-            setModalContent(null);
-        }, 170);
+        setModalStack(previousStack => previousStack.slice(0, -1));
     };
 
     return (
-        <ModalContext.Provider value={{ openModal, closeModal, isOpen }}>
+        <ModalContext.Provider value={{ openModal, closeModal }}>
             {children}
-            <Modal isOpen={isOpen} onClose={closeModal}>
-                {modalContent}
-            </Modal>
+            {modalStack.map((content, index) => (
+                <Modal
+                    key={index}
+                    isOpen={true}
+                    onClose={closeModal}
+                    zIndex={1000 + index * 10} // Увеличиваем z-index для каждой вложенной модалки
+                >
+                    {content}
+                </Modal>
+            ))}
         </ModalContext.Provider>
     );
 }

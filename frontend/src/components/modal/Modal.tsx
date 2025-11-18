@@ -20,16 +20,20 @@ export default function Modal({ isOpen, onClose, children, className, zIndex = 1
     const contentRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
     const [isClosing, setIsClosing] = useState(false);
+    const animationDuration = 300; // Время анимации закрытия в миллисекундах
 
-    // Запустить анимацию закрытия и уведомить провайдера (onClose)
+    // Запустить анимацию закрытия и уведомить провайдера после завершения анимации
     const startClose = useCallback(() => {
         if (isClosing) return;
         setIsClosing(true);
 
         contentRef.current?.classList.add(style.closing);
         backdropRef.current?.classList.add(style.backdropClosing);
-        onClose();
-    }, [isClosing, onClose]);
+
+        setTimeout(() => {
+            onClose();
+        }, animationDuration);
+    }, [isClosing, onClose, animationDuration]);
 
     // Закрытие по Escape и popstate
     useEffect(() => {
