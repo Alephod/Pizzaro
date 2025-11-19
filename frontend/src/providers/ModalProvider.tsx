@@ -9,8 +9,12 @@ interface ModalContextType {
 }
 
 export const ModalContext = createContext<ModalContextType>({
-    openModal: () => {},
-    closeModal: () => {},
+    openModal: () => {
+    throw new Error('ModalContext: openModal called outside of ModalProvider');
+  },
+  closeModal: () => {
+    throw new Error('ModalContext: closeModal called outside of ModalProvider');
+  },
 });
 
 interface ModalProviderProps {
