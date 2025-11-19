@@ -24,7 +24,9 @@ interface AddProductModalProps {
     onSubmit?: (data: ItemData) => void;
 }
 export default function ProductModal({ section, onSubmit, mode, itemData }: AddProductModalProps) {
-    const options = useMemo<string[]>(() => (Array.isArray(section?.schema?.options) ? section.schema.options : []), [section]);
+    const options = useMemo<string[]>(() => {
+        return section?.schema?.options.map(opt => opt.name).filter((name): name is string => typeof name === 'string') ?? [];
+    }, [section]);
     const defaultOption = useMemo(() => options[0] ?? '', [options]);
     const itemDataVariants = useMemo<ItemVariant[]>(() => (Array.isArray(itemData?.data) ? (itemData.data as ItemVariant[]) : []), [itemData]);
     type VariantMap = Record<string, { weight: string; kkal: string; cost: string }>;
