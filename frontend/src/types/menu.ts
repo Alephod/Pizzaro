@@ -3,6 +3,7 @@ export interface ItemVariant {
     weight: string;
     kkal: string;
     cost: string;
+    addons: Addon[]; 
 }
 
 export interface Product {
@@ -17,14 +18,20 @@ export interface Product {
     updatedAt: string;
 }
 
+export interface Addon {
+    name: string;
+    imageUrl: string;
+    cost: string; 
+}
+
 export type SectionSchema = {
-    options: string[];
+    options: { name: string; addons: Addon[] }[]; 
 };
 
 export interface SectionData {
     name: string;
     slug: string;
-    schema: SectionSchema | null;
+    schema: SectionSchema;
     order?: number;
 }
 
@@ -32,7 +39,7 @@ export interface MenuSection {
     id: number;
     name: string;
     slug: string;
-    schema: SectionSchema | null;
+    schema: SectionSchema;
     order: number;
     items: Product[];
     createdAt: string;
