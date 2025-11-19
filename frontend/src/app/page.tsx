@@ -22,7 +22,7 @@ export default async function Home() {
 
                             <div className={styles.grid}>
                                 {section.items.map(product => (
-                                    <ProductCard key={product.id} product={product} />
+                                    <ProductCard schema={section.schema} key={product.id} product={product} />
                                 ))}
                             </div>
                         </section>

@@ -1,45 +1,61 @@
 'use client';
 
-import React from 'react';
-import type { Product } from '@/types/menu';
+import React, { useContext } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
 import styles from './ProductCard.module.scss';
-import Image from 'next/image';
+import { ModalContext } from '@/providers/ModalProvider';
+import type { Addon, ItemVariant, Product, SectionSchema } from '@/types/menu';
+import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
 
 export interface ProductCardProps {
     product: Product;
-    onAdd?: (productId: number) => void;
+    schema: SectionSchema;
+    // onAddToCart: (selectedVariant: ItemVariant, selectedAddons: Addon[]) => void;
 }
 
-function parsePrice(cost: string): number | undefined {
-    const cleaned = cost.replace(/[^\d.,-]/g, '').replace(',', '.');
-    if (cleaned === '') return undefined;
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : undefined;
+function parsePrice(costString: string): number | undefined {
+    const cleanedString = costString.replace(/[^\d.,-]/g, '').replace(',', '.');
+    if (cleanedString === '') return undefined;
+    const parsedNumber = Number(cleanedString);
+    return Number.isFinite(parsedNumber) ? parsedNumber : undefined;
 }
 
-export function ProductCard({ product, onAdd }: ProductCardProps) {
-    const prices = product.data.map(v => parsePrice(v.cost)).filter((p): p is number => typeof p === 'number');
+export function ProductCard({ product, schema }: ProductCardProps) {
+    const { openModal, closeModal } = useContext(ModalContext);
 
-    const minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
-    const minPriceDisplay = minPrice !== undefined ? `${minPrice % 1 === 0 ? minPrice.toFixed(0) : minPrice.toFixed(2)} ₽` : '-';
+    const pricesList = product.data.map(variant => parsePrice(variant.cost)).filter((price): price is number => typeof price === 'number');
+    const minimumPrice = pricesList.length > 0 ? Math.min(...pricesList) : undefined;
+    const minimumPriceDisplay = minimumPrice !== undefined ? `${minimumPrice % 1 === 0 ? minimumPrice.toFixed(0) : minimumPrice.toFixed(2)} ₽` : '-';
+
+    const handleOpenModal = () => {
+        const handleClose = () => {
+            closeModal();
+        };
+        const handleAdd = (selectedVariant: ItemVariant, selectedAddons: Addon[]) => {
+            // onAddToCart(selectedVariant, selectedAddons);
+            closeModal();
+        };
+        openModal(<ConfigureProductModal schema={schema} product={product} onAddToCart={handleAdd} onClose={handleClose} />);
+    };
+
+    const cleanDescription = (text: string): string => {
+        return text.replace(/\s*\[[xх]\]\s*/gi, '');
+    };
 
     return (
-        <article onClick={() => onAdd?.(product.id)} className={styles.card} aria-labelledby={`prod-title-${product.id}`}>
+        <article onClick={handleOpenModal} className={styles.card} aria-labelledby={`product-title-${product.id}`}>
             <div className={styles.media}>
                 <Image fill className={styles.image} src={product.imageUrl} alt={product.name} />
             </div>
-
             <div className={styles.body}>
-                <h3 id={`prod-title-${product.id}`} className={styles.title}>
+                <h3 id={`product-title-${product.id}`} className={styles.title}>
                     {product.name}
                 </h3>
-
-                <p className={styles.description}>{product.description}</p>
-
+                <p className={styles.description}>{cleanDescription(product.description)}</p>
                 <div className={styles.row}>
-                    <p className={styles.price}>от {minPriceDisplay}</p>
-                    <Button size="md" variant="primary" onClick={() => onAdd?.(product.id)} aria-label={`Добавить ${product.name} в корзину`}>
+                    <p className={styles.price}>от {minimumPriceDisplay}</p>
+                    <Button size="md" variant="primary" onClick={handleOpenModal} aria-label={`Добавить ${product.name} в корзину`}>
                         В корзину
                     </Button>
                 </div>
