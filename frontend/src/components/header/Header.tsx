@@ -1,7 +1,6 @@
-// Header.tsx
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import style from './Header.module.scss';
 import Link from 'next/link';
 import { LogIn, ShoppingCart } from 'lucide-react';
@@ -9,12 +8,16 @@ import type { MenuSection } from '@/types/menu';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
 import clsx from 'clsx';
+import { ModalContext } from '@/providers/ModalProvider';
+import { Cart } from '@/components/cart/Cart';
 
 interface HeaderProps {
     sections: MenuSection[];
 }
 
 export function Header({ sections }: HeaderProps) {
+    const { openModal, closeModal } = useContext(ModalContext);
+
     const filteredSections = sections.filter(s => s.items && s.items.length > 0);
 
     const headerRef = useRef<HTMLElement | null>(null);
@@ -63,6 +66,10 @@ export function Header({ sections }: HeaderProps) {
         };
     }, []);
 
+    const handleOpenCart = () => {
+        openModal(<Cart isOpen={true} onClose={closeModal} />, 'right');
+    };
+
     return (
         <>
             <header className={style.header} ref={headerRef}>
@@ -95,7 +102,7 @@ export function Header({ sections }: HeaderProps) {
                         </nav>
                     </div>
 
-                    <button className={style.cartBtn}>
+                    <button onClick={handleOpenCart} className={style.cartBtn}>
                         <ShoppingCart size={22} />
                         Корзина
                     </button>

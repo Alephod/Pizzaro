@@ -7,8 +7,6 @@ import styles from './ProductCard.module.scss';
 import { ModalContext } from '@/providers/ModalProvider';
 import type { Product, SectionSchema } from '@/types/menu';
 import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
-import { useCart } from '@/providers/CartProvider';
-import type { CartItem } from '@/types/cart';
 
 export interface ProductCardProps {
     product: Product;
@@ -23,7 +21,6 @@ function parsePrice(costString: string): number {
 
 export function ProductCard({ product, schema }: ProductCardProps) {
     const { openModal, closeModal } = useContext(ModalContext);
-    const { addItem } = useCart(); // добавляем корзину
 
     // Находим самый дешёвый вариант
     const cheapestVariant = product.data.reduce((cheapest, variant) => {
@@ -34,22 +31,6 @@ export function ProductCard({ product, schema }: ProductCardProps) {
 
     const minPrice = parsePrice(cheapestVariant.cost);
     const minPriceDisplay = minPrice % 1 === 0 ? `${minPrice.toFixed(0)} ₽` : `${minPrice.toFixed(2)} ₽`;
-
-    // Быстрое добавление без модалки
-    const handleAdd = (e: React.MouseEvent) => {
-        e.stopPropagation(); // чтобы не сработал onClick на всей карточке
-        const item: CartItem = {
-            name: product.name,
-            sectionId: product.sectionId,
-            description: product.description,
-            imageUrl: product.imageUrl,
-            count: 1,
-            removedIngredients: [],
-            addons: [],
-        };
-        console.log(item);
-        addItem(item);
-    };
 
     // Открытие модалки для полной настройки
     const handleOpenModal = () => {
@@ -63,8 +44,8 @@ export function ProductCard({ product, schema }: ProductCardProps) {
     };
 
     return (
-        <article className={styles.card} aria-labelledby={`product-title-${product.id}`}>
-            <div onClick={handleOpenModal} className={styles.media}>
+        <article className={styles.card} onClick={handleOpenModal} aria-labelledby={`product-title-${product.id}`}>
+            <div className={styles.media}>
                 <Image fill className={styles.image} src={product.imageUrl} alt={product.name} />
             </div>
 
@@ -78,7 +59,7 @@ export function ProductCard({ product, schema }: ProductCardProps) {
                 <div className={styles.row}>
                     <p className={styles.price}>от {minPriceDisplay}</p>
 
-                    <Button size="md" variant="primary" onClick={handleAdd} aria-label={`Выбрать ${product.name}`}>
+                    <Button size="md" variant="primary" aria-label={`Выбрать ${product.name}`}>
                         Выбрать
                     </Button>
                 </div>

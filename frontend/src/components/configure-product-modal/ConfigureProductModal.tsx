@@ -164,10 +164,11 @@ export function ConfigureProductModal({ product, schema, onClose }: ProductModal
                                 description: product.description,
                                 imageUrl: product.imageUrl,
                                 count: 1,
+                                variant: selectedVariant.name,
+                                cost: Number(selectedVariant.cost),
                                 removedIngredients: Array.from(removedIngredients),
                                 addons: selectedAddons.map(addon => addon.name),
                             };
-                            console.log(item);
                             addItem(item);
                             onClose();
                         }}

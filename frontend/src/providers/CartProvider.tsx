@@ -1,17 +1,7 @@
 'use client';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import debounce from 'lodash.debounce';
-
-export interface CartItem {
-    name: string;
-    sectionId: number;
-    description: string;
-    imageUrl: string;
-    count: number;
-    removedIngredients: string[];
-    addons: string[];
-    id: string;
-}
+import type { CartItem } from '@/types/cart';
 
 type CartState = { items: CartItem[] };
 
@@ -86,7 +76,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 try {
                     localStorage.setItem(CART_LOCAL_STORAGE_KEY, JSON.stringify(currentState));
                 } catch (error) {
-                    console.warn('Failed to save cart', error);
+                    throw new Error(`Failed to save cart ${error}`);
                 }
             }, SAVE_DEBOUNCE_MILLISECONDS),
         []
@@ -136,6 +126,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 description: newItemData.description ?? '',
                 imageUrl: newItemData.imageUrl ?? '',
                 count: countToAdd,
+                cost: newItemData.cost,
+                variant: newItemData.variant,
                 removedIngredients: newItemData.removedIngredients ?? [],
                 addons: newItemData.addons ?? [],
             };
@@ -175,6 +167,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             description: item.description,
             imageUrl: item.imageUrl,
             count: item.count,
+            cost: item.cost,
+            variant: item.variant,
             removedIngredients: item.removedIngredients,
             addons: item.addons,
         }));

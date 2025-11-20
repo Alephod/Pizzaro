@@ -43,6 +43,14 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
+    text-underline-offset: 3px;
+    text-decoration: underline dashed;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.15s;
+
+    &:hover {
+        text-decoration-color: #666;
+    }
 }
 
 .removedIngredient {
