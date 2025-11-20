@@ -9,7 +9,6 @@ import type { MenuSection } from '@/types/menu';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
 import clsx from 'clsx';
-import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
     sections: MenuSection[];
@@ -22,9 +21,6 @@ export function Header({ sections }: HeaderProps) {
     const bottomRowWrapperRef = useRef<HTMLDivElement | null>(null);
 
     const [isSticky, setIsSticky] = useState(false);
-    const pathname = usePathname() || '';
-
-    const isAdmin = /^\/admin(\/|$)/.test(pathname);
 
     //sticky detection
     useEffect(() => {
@@ -67,7 +63,6 @@ export function Header({ sections }: HeaderProps) {
         };
     }, []);
 
-    if (isAdmin) return null;
     return (
         <>
             <header className={style.header} ref={headerRef}>

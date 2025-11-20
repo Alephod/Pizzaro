@@ -56,14 +56,17 @@ export function ConfigureProductModal({ product, schema, onAddToCart, onClose }:
     };
 
     const parseIngredients = (description: string): Ingredient[] => {
-        const parts = description.split(', ');
-        return parts.map(part => {
-            const trimmedPart = part.trim();
-            if (trimmedPart.endsWith('[x]')) {
-                const name = trimmedPart.slice(0, -3).trim();
+        return description.split(', ').map(part => {
+            const trimmed = part.trim();
+
+            const removableMatch = trimmed.match(/\[ ?[xх] ?]$/i);
+
+            if (removableMatch) {
+                const name = trimmed.slice(0, -removableMatch[0].length).trim();
                 return { name, isRemovable: true };
             }
-            return { name: trimmedPart, isRemovable: false };
+
+            return { name: trimmed, isRemovable: false };
         });
     };
 

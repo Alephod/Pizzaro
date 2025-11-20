@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
-import './globals.scss';
+import '@/app/globals.scss';
 import ModalProvider from '@/providers/ModalProvider';
-import { Header } from '@/components/header/Header';
-import { getMenuSections } from '@/lib/fetchMenu';
 
 const openSans = Open_Sans({
     subsets: ['latin', 'cyrillic'],
@@ -18,15 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const sections = await getMenuSections();
-
     return (
         <html lang="ru" className={openSans.variable}>
             <body>
-                <ModalProvider>
-                    <Header sections={sections} />
-                    {children}
-                </ModalProvider>
+                <ModalProvider>{children}</ModalProvider>
             </body>
         </html>
     );
