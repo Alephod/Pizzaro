@@ -8,11 +8,11 @@ import RadioButton from '@/components/ui/radio-button/RadioButton';
 import clsx from 'clsx';
 import { Undo2, X } from 'lucide-react';
 import type { CartItem } from '@/types/cart';
+import { useCart } from '@/providers/CartProvider';
 
 interface ProductModalProps {
     product: Product;
     schema: SectionSchema;
-    onAddToCart: (cartItem: CartItem) => void;
     onClose: () => void;
 }
 
@@ -21,7 +21,9 @@ interface Ingredient {
     isRemovable: boolean;
 }
 
-export function ConfigureProductModal({ product, schema, onAddToCart, onClose }: ProductModalProps) {
+export function ConfigureProductModal({ product, schema, onClose }: ProductModalProps) {
+    const { addItem } = useCart();
+
     const initialVariant = product.data[0];
     const [selectedVariant, setSelectedVariant] = useState<ItemVariant>(initialVariant);
     const [selectedAddons, setSelectedAddons] = useState<Addon[]>([]);
@@ -166,8 +168,7 @@ export function ConfigureProductModal({ product, schema, onAddToCart, onClose }:
                                 addons: selectedAddons.map(addon => addon.name),
                             };
                             console.log(item);
-
-                            onAddToCart(item);
+                            addItem(item);
                             onClose();
                         }}
                     >

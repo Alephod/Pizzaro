@@ -5,58 +5,81 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
 import styles from './ProductCard.module.scss';
 import { ModalContext } from '@/providers/ModalProvider';
-import type { Addon, ItemVariant, Product, SectionSchema } from '@/types/menu';
+import type { Product, SectionSchema } from '@/types/menu';
 import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
+import { useCart } from '@/providers/CartProvider';
+import type { CartItem } from '@/types/cart';
 
 export interface ProductCardProps {
     product: Product;
     schema: SectionSchema;
-    // onAddToCart: (selectedVariant: ItemVariant, selectedAddons: Addon[]) => void;
 }
 
-function parsePrice(costString: string): number | undefined {
-    const cleanedString = costString.replace(/[^\d.,-]/g, '').replace(',', '.');
-    if (cleanedString === '') return undefined;
-    const parsedNumber = Number(cleanedString);
-    return Number.isFinite(parsedNumber) ? parsedNumber : undefined;
+function parsePrice(costString: string): number {
+    const cleaned = costString.replace(/[^\d.,-]/g, '').replace(',', '.');
+    const num = Number(cleaned);
+    return Number.isFinite(num) ? num : 0;
 }
 
 export function ProductCard({ product, schema }: ProductCardProps) {
     const { openModal, closeModal } = useContext(ModalContext);
+    const { addItem } = useCart(); // добавляем корзину
 
-    const pricesList = product.data.map(variant => parsePrice(variant.cost)).filter((price): price is number => typeof price === 'number');
-    const minimumPrice = pricesList.length > 0 ? Math.min(...pricesList) : undefined;
-    const minimumPriceDisplay = minimumPrice !== undefined ? `${minimumPrice % 1 === 0 ? minimumPrice.toFixed(0) : minimumPrice.toFixed(2)} ₽` : '-';
+    // Находим самый дешёвый вариант
+    const cheapestVariant = product.data.reduce((cheapest, variant) => {
+        const price = parsePrice(variant.cost);
+        const cheapestPrice = parsePrice(cheapest.cost);
+        return price < cheapestPrice ? variant : cheapest;
+    });
 
+    const minPrice = parsePrice(cheapestVariant.cost);
+    const minPriceDisplay = minPrice % 1 === 0 ? `${minPrice.toFixed(0)} ₽` : `${minPrice.toFixed(2)} ₽`;
+
+    // Быстрое добавление без модалки
+    const handleAdd = (e: React.MouseEvent) => {
+        e.stopPropagation(); // чтобы не сработал onClick на всей карточке
+        const item: CartItem = {
+            name: product.name,
+            sectionId: product.sectionId,
+            description: product.description,
+            imageUrl: product.imageUrl,
+            count: 1,
+            removedIngredients: [],
+            addons: [],
+        };
+        console.log(item);
+        addItem(item);
+    };
+
+    // Открытие модалки для полной настройки
     const handleOpenModal = () => {
         const handleClose = () => {
             closeModal();
         };
-        const handleAdd = (selectedVariant: ItemVariant, selectedAddons: Addon[]) => {
-            // onAddToCart(selectedVariant, selectedAddons);
-            closeModal();
-        };
-        openModal(<ConfigureProductModal schema={schema} product={product} onAddToCart={handleAdd} onClose={handleClose} />);
+        openModal(<ConfigureProductModal schema={schema} product={product} onClose={handleClose} />);
     };
-
     const cleanDescription = (text: string): string => {
         return text.replace(/\s*\[[xх]\]\s*/gi, '');
     };
 
     return (
-        <article onClick={handleOpenModal} className={styles.card} aria-labelledby={`product-title-${product.id}`}>
-            <div className={styles.media}>
+        <article className={styles.card} aria-labelledby={`product-title-${product.id}`}>
+            <div onClick={handleOpenModal} className={styles.media}>
                 <Image fill className={styles.image} src={product.imageUrl} alt={product.name} />
             </div>
+
             <div className={styles.body}>
                 <h3 id={`product-title-${product.id}`} className={styles.title}>
                     {product.name}
                 </h3>
+
                 <p className={styles.description}>{cleanDescription(product.description)}</p>
+
                 <div className={styles.row}>
-                    <p className={styles.price}>от {minimumPriceDisplay}</p>
-                    <Button size="md" variant="primary" onClick={handleOpenModal} aria-label={`Добавить ${product.name} в корзину`}>
-                        В корзину
+                    <p className={styles.price}>от {minPriceDisplay}</p>
+
+                    <Button size="md" variant="primary" onClick={handleAdd} aria-label={`Выбрать ${product.name}`}>
+                        Выбрать
                     </Button>
                 </div>
             </div>

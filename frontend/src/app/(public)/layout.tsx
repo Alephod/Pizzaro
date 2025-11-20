@@ -4,6 +4,7 @@ import '@/app/globals.scss';
 import ModalProvider from '@/providers/ModalProvider';
 import { Header } from '@/components/header/Header';
 import { getMenuSections } from '@/lib/fetchMenu';
+import { CartProvider } from '@/providers/CartProvider';
 
 const openSans = Open_Sans({
     subsets: ['latin', 'cyrillic'],
@@ -23,10 +24,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return (
         <html lang="ru" className={openSans.variable}>
             <body>
-                <ModalProvider>
-                    <Header sections={sections} />
-                    {children}
-                </ModalProvider>
+                <CartProvider>
+                    <ModalProvider>
+                        <Header sections={sections} />
+                        {children}
+                    </ModalProvider>
+                </CartProvider>
             </body>
         </html>
     );

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input/Input';
 import TextArea from '@/components/ui/textarea/Textarea';
 import PhotoUpload from '@/components/ui/photo-upload/PhotoUpload';
 import { Button } from '@/components/ui/button/Button';
-import RadioButton from '../../../../components/ui/radio-button/RadioButton';
+import RadioButton from '@/components/ui/radio-button/RadioButton';
 import type { MenuSection, ItemVariant } from '@/types/menu';
 import style from './ProductModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
