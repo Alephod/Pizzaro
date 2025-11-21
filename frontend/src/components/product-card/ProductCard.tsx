@@ -7,6 +7,7 @@ import styles from './ProductCard.module.scss';
 import { ModalContext } from '@/providers/ModalProvider';
 import type { Product, SectionSchema } from '@/types/menu';
 import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
+import { cleanDescription, normalizePrice } from '@/utils';
 
 export interface ProductCardProps {
     product: Product;
@@ -30,7 +31,7 @@ export function ProductCard({ product, schema }: ProductCardProps) {
     });
 
     const minPrice = parsePrice(cheapestVariant.cost);
-    const minPriceDisplay = minPrice % 1 === 0 ? `${minPrice.toFixed(0)} ₽` : `${minPrice.toFixed(2)} ₽`;
+    const minPriceDisplay = normalizePrice(minPrice);
 
     // Открытие модалки для полной настройки
     const handleOpenModal = () => {
@@ -38,9 +39,6 @@ export function ProductCard({ product, schema }: ProductCardProps) {
             closeModal();
         };
         openModal(<ConfigureProductModal schema={schema} product={product} onClose={handleClose} />);
-    };
-    const cleanDescription = (text: string): string => {
-        return text.replace(/\s*\[[xх]\]\s*/gi, '');
     };
 
     return (

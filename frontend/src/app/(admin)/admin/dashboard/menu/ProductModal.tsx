@@ -10,6 +10,7 @@ import RadioButton from '@/components/ui/radio-button/RadioButton';
 import type { MenuSection, ItemVariant } from '@/types/menu';
 import style from './ProductModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
+import { resolveImageSrc } from '@/utils';
 export interface ItemData {
     name: string;
     description: string;
@@ -67,13 +68,6 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
         setErrors({});
     }, [section?.id, itemData?.name, itemData?.description, itemData?.imageUrl, buildInitialVariants, defaultOption]);
     const isReadOnly = mode === 'view';
-    const resolveImageSrc = (src?: string | null) => {
-        if (!src) return '';
-        if (src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) return src;
-        if (typeof window !== 'undefined') return `${window.location.origin.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-        return `${base.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
-    };
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

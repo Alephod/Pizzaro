@@ -11,6 +11,7 @@ import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import React from 'react';
 import type { MenuSection, SectionData, SectionSchema, Product, ItemVariant } from '@/types/menu';
+import { getErrorMessage } from '@/utils';
 
 interface Props {
     sectionsData: MenuSection[];
@@ -41,9 +42,6 @@ export default function AdminMenuClient({ sectionsData }: Props) {
     // -----------------------
     // helpers for errors & modals
     // -----------------------
-    function getErrorMessage(err: unknown) {
-        return err instanceof Error ? err.message : String(err);
-    }
 
     function InfoContent({ title, message, onClose }: { title?: string; message: string; onClose: () => void }) {
         return (

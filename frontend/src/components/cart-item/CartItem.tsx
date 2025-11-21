@@ -10,6 +10,7 @@ import { useContext } from 'react';
 import { ModalContext } from '@/providers/ModalProvider';
 import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
 import type { MenuSection } from '@/types/menu';
+import { cleanDescription } from '@/utils';
 
 interface Ingredient {
     name: string;
@@ -33,13 +34,10 @@ export function CartItem({ item, onDecrease, onIncrease, onRemove }: CartItemPro
     const parseIngredients = (description: string): Ingredient[] => {
         return description.split(', ').map(part => {
             const trimmed = part.trim();
-            const removableMatch = trimmed.match(/\[ ?[xх] ?]$/i);
+            const isRemovable = /\[ ?[xх] ?]$/i.test(trimmed);
+            const name = cleanDescription(trimmed).trim();
 
-            if (removableMatch) {
-                const name = trimmed.slice(0, -removableMatch[0].length).trim();
-                return { name, isRemovable: true };
-            }
-            return { name: trimmed, isRemovable: false };
+            return { name, isRemovable };
         });
     };
 
