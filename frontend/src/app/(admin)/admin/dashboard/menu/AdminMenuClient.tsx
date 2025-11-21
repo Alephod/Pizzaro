@@ -11,6 +11,8 @@ import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import React from 'react';
 import type { MenuSection, SectionData, SectionSchema, Product, ItemVariant } from '@/types/menu';
+import { getErrorMessage } from '@/utils';
+import { useInfoModal } from '@/components/info-modal/InfoModal';
 
 interface Props {
     sectionsData: MenuSection[];
@@ -18,6 +20,7 @@ interface Props {
 
 export default function AdminMenuClient({ sectionsData }: Props) {
     const { openModal, closeModal } = useContext(ModalContext);
+    const { showInfo } = useInfoModal();
 
     const [sections, setSections] = useState<MenuSection[]>(sectionsData);
     const [isEditing, setIsEditing] = useState(false);
@@ -37,44 +40,6 @@ export default function AdminMenuClient({ sectionsData }: Props) {
         setBackupSections(JSON.parse(JSON.stringify(sections)));
         setIsEditing(true);
     };
-
-    // -----------------------
-    // helpers for errors & modals
-    // -----------------------
-    function getErrorMessage(err: unknown) {
-        return err instanceof Error ? err.message : String(err);
-    }
-
-    function InfoContent({ title, message, onClose }: { title?: string; message: string; onClose: () => void }) {
-        return (
-            <div className={style.infoModal}>
-                {title && <h3 className={style.infoTitle}>{title}</h3>}
-                <div className={style.infoMessage}>{message}</div>
-                <div className={style.infoActions}>
-                    <Button
-                        size="md"
-                        variant="primary"
-                        className={style.infoModalBtn}
-                        onClick={() => {
-                            onClose();
-                        }}
-                    >
-                        OK
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    function showInfo(message: string, title?: string): Promise<void> {
-        return new Promise(resolve => {
-            const handleClose = () => {
-                closeModal();
-                resolve();
-            };
-            openModal(<InfoContent title={title} message={message} onClose={handleClose} />);
-        });
-    }
 
     // helper: upload data URL if needed -> returns relative URL or original
     async function uploadDataUrlIfNeeded(maybeDataUrl: string): Promise<string> {

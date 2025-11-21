@@ -3,6 +3,7 @@ import style from './AdminProductCard.module.scss';
 import { Edit, Trash2 } from 'lucide-react';
 import React from 'react';
 import Image from 'next/image';
+import { resolveImageSrc } from '@/utils';
 
 interface AdminProductCardProps {
     item: Product;
@@ -10,16 +11,6 @@ interface AdminProductCardProps {
     onEdit?: () => void;
     onDelete?: () => void;
     onView?: () => void;
-}
-
-function resolveImageSrc(src?: string | null) {
-    if (!src) return 'https://via.placeholder.com/200';
-    if (src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) return src;
-    if (typeof window !== 'undefined') {
-        return `${window.location.origin.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
-    }
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-    return `${base.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
 }
 
 export default function AdminProductCard({ item, isEditing, onEdit, onDelete, onView }: AdminProductCardProps) {

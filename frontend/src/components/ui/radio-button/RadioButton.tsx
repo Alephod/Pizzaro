@@ -7,10 +7,11 @@ import { useRef, useEffect } from 'react';
 interface RadioButtonProps {
     options: string[];
     selected: string;
+    customStyle?: React.CSSProperties;
     onChange: (value: string) => void;
 }
 
-export default function RadioButton({ options, selected, onChange }: RadioButtonProps) {
+export default function RadioButton({ options, selected, onChange, customStyle }: RadioButtonProps) {
     const sliderRef = useRef<HTMLDivElement>(null);
     const optionRefs = useRef<HTMLButtonElement[]>([]);
 
@@ -28,7 +29,7 @@ export default function RadioButton({ options, selected, onChange }: RadioButton
     }, [selected, options]);
 
     return (
-        <div className={style.wrapper}>
+        <div style={customStyle} className={style.wrapper}>
             {options.map((opt, index) => (
                 <button
                     type="button"

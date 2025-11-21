@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input/Input';
 import TextArea from '@/components/ui/textarea/Textarea';
 import PhotoUpload from '@/components/ui/photo-upload/PhotoUpload';
 import { Button } from '@/components/ui/button/Button';
-import RadioButton from '../../../../components/ui/radio-button/RadioButton';
+import RadioButton from '@/components/ui/radio-button/RadioButton';
 import type { MenuSection, ItemVariant } from '@/types/menu';
 import style from './ProductModal.module.scss';
 import commonStyle from './CommonModal.module.scss';
+import { resolveImageSrc } from '@/utils';
+import { useInfoModal } from '@/components/info-modal/InfoModal';
 export interface ItemData {
     name: string;
     description: string;
@@ -24,6 +26,7 @@ interface AddProductModalProps {
     onSubmit?: (data: ItemData) => void;
 }
 export default function ProductModal({ section, onSubmit, mode, itemData }: AddProductModalProps) {
+    const { showInfo } = useInfoModal();
     const options = useMemo<string[]>(() => {
         return section?.schema?.options.map(opt => opt.name).filter((name): name is string => typeof name === 'string') ?? [];
     }, [section]);
@@ -67,40 +70,48 @@ export default function ProductModal({ section, onSubmit, mode, itemData }: AddP
         setErrors({});
     }, [section?.id, itemData?.name, itemData?.description, itemData?.imageUrl, buildInitialVariants, defaultOption]);
     const isReadOnly = mode === 'view';
-    const resolveImageSrc = (src?: string | null) => {
-        if (!src) return '';
-        if (src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) return src;
-        if (typeof window !== 'undefined') return `${window.location.origin.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-        return `${base.replace(/\/$/, '')}/${src.replace(/^\/+/, '')}`;
-    };
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Сбрасываем ошибку фото заранее
         setErrors(prev => ({ ...prev, photo: undefined }));
 
-        // Попытка upload -> устанавливаем returned URL в photo
+        // Пытаемся загрузить на сервер
         try {
             const fd = new FormData();
             fd.append('file', file);
-            const res = await fetch('/api/upload', { method: 'POST', body: fd });
-            const json = await res.json();
-            if (res.ok && json && typeof json.url === 'string' && json.url.length) {
-                setPhoto(json.url);
-                return;
-            }
-        } catch {}
 
-        // Если загрузка не удалась — fallback: показываем data URL как раньше
-        const reader = new FileReader();
-        reader.onload = () => {
-            setPhoto(reader.result as string);
-            setErrors(prev => ({ ...prev, photo: undefined }));
-        };
-        reader.readAsDataURL(file);
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: fd,
+            });
+
+            if (res.ok) {
+                const json = await res.json();
+                if (json?.url && typeof json.url === 'string') {
+                    setPhoto(json.url);
+                    return;
+                }
+            }
+            throw new Error('Сервер не вернул ссылку на изображение');
+        } catch {
+            // Опционально: показываем пользователю, что загрузка не удалась, но фото всё равно будет
+            void showInfo('Не удалось загрузить изображение на сервер. Фото будет сохранено локально (после сохранения товара — загрузится автоматически).', 'Загрузка временно недоступна');
+
+            // Fallback: используем data URL
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result as string;
+                if (result.startsWith('data:')) {
+                    setPhoto(result);
+                }
+            };
+            reader.onerror = () => {
+                setErrors(prev => ({ ...prev, photo: 'Не удалось прочитать файл' }));
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleDeletePhoto = () => {

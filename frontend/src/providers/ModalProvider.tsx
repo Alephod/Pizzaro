@@ -1,31 +1,36 @@
 'use client';
 
 import { createContext, useState, type ReactNode } from 'react';
-import Modal from '@/components/modal/Modal'; 
+import Modal from '@/components/modal/Modal';
 
 interface ModalContextType {
-    openModal: (content: ReactNode) => void;
+    openModal: (content: ReactNode, position?: 'center' | 'right') => void;
     closeModal: () => void;
 }
 
 export const ModalContext = createContext<ModalContextType>({
     openModal: () => {
-    throw new Error('ModalContext: openModal called outside of ModalProvider');
-  },
-  closeModal: () => {
-    throw new Error('ModalContext: closeModal called outside of ModalProvider');
-  },
+        throw new Error('ModalContext: openModal called outside of ModalProvider');
+    },
+    closeModal: () => {
+        throw new Error('ModalContext: closeModal called outside of ModalProvider');
+    },
 });
 
 interface ModalProviderProps {
     children: ReactNode;
 }
 
-export default function ModalProvider({ children }: ModalProviderProps) {
-    const [modalStack, setModalStack] = useState<ReactNode[]>([]);
+interface ModalEntry {
+    content: ReactNode;
+    position: 'center' | 'right';
+}
 
-    const openModal = (newContent: ReactNode) => {
-        setModalStack(previousStack => [...previousStack, newContent]);
+export default function ModalProvider({ children }: ModalProviderProps) {
+    const [modalStack, setModalStack] = useState<ModalEntry[]>([]);
+
+    const openModal = (newContent: ReactNode, position: 'center' | 'right' = 'center') => {
+        setModalStack(previousStack => [...previousStack, { content: newContent, position }]);
     };
 
     const closeModal = () => {
@@ -35,14 +40,9 @@ export default function ModalProvider({ children }: ModalProviderProps) {
     return (
         <ModalContext.Provider value={{ openModal, closeModal }}>
             {children}
-            {modalStack.map((content, index) => (
-                <Modal
-                    key={index}
-                    isOpen={true}
-                    onClose={closeModal}
-                    zIndex={1000 + index * 10} 
-                >
-                    {content}
+            {modalStack.map((modalEntry, index) => (
+                <Modal key={index} isOpen={true} position={modalEntry.position} onClose={closeModal} zIndex={1000 + index * 10}>
+                    {modalEntry.content}
                 </Modal>
             ))}
         </ModalContext.Provider>

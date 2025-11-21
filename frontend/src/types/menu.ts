@@ -3,7 +3,6 @@ export interface ItemVariant {
     weight: string;
     kkal: string;
     cost: string;
-    addons: Addon[]; 
 }
 
 export interface Product {
