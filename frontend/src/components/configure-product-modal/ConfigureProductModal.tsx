@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
 import styles from './ConfigureProductModal.module.scss';
@@ -14,6 +15,7 @@ interface ProductModalProps {
     product: Product;
     schema: SectionSchema;
     onClose: () => void;
+    initialItem?: CartItem;
 }
 
 interface Ingredient {
@@ -21,13 +23,27 @@ interface Ingredient {
     isRemovable: boolean;
 }
 
-export function ConfigureProductModal({ product, schema, onClose }: ProductModalProps) {
-    const { addItem } = useCart();
+export function ConfigureProductModal({ product, schema, onClose, initialItem }: ProductModalProps) {
+    const { addItem, updateItem } = useCart();
 
     const initialVariant = product.data[0];
     const [selectedVariant, setSelectedVariant] = useState<ItemVariant>(initialVariant);
     const [selectedAddons, setSelectedAddons] = useState<Addon[]>([]);
     const [removedIngredients, setRemovedIngredients] = useState<Set<string>>(new Set());
+
+    // Pre-fill states if editing existing item
+    useEffect(() => {
+        if (initialItem) {
+            const variant = product.data.find(v => v.name === initialItem.variant) || initialVariant;
+            setSelectedVariant(variant);
+
+            setRemovedIngredients(new Set(initialItem.removedIngredients));
+
+            const addonsForVariant = schema.options.find(o => o.name === variant.name)?.addons || [];
+            const preSelectedAddons = addonsForVariant.filter(a => initialItem.addons.includes(a.name));
+            setSelectedAddons(preSelectedAddons);
+        }
+    }, [initialItem, product.data, schema.options, initialVariant]);
 
     const variantOptions = product.data.map(variant => variant.name);
 
@@ -92,6 +108,30 @@ export function ConfigureProductModal({ product, schema, onClose }: ProductModal
     const totalCost = baseCost + addonsTotalCost;
     const totalCostDisplay = `${totalCost % 1 === 0 ? totalCost.toFixed(0) : totalCost.toFixed(2)} ₽`;
 
+    const handleSave = () => {
+        const updatedData = {
+            variant: selectedVariant.name,
+            cost: totalCost,
+            removedIngredients: Array.from(removedIngredients),
+            addons: selectedAddons.map(addon => addon.name),
+        };
+
+        if (initialItem) {
+            updateItem(initialItem.id || '', updatedData);
+        } else {
+            const newItem: CartItem = {
+                name: product.name,
+                sectionId: product.sectionId,
+                description: product.description,
+                imageUrl: product.imageUrl,
+                count: 1,
+                ...updatedData,
+            };
+            addItem(newItem);
+        }
+        onClose();
+    };
+
     return (
         <div className={styles.modalContainer}>
             <div className={styles.imageWrapper}>
@@ -154,26 +194,8 @@ export function ConfigureProductModal({ product, schema, onClose }: ProductModal
                     </>
                 )}
                 <div className={styles.footer}>
-                    <Button
-                        size="lg"
-                        variant="primary"
-                        onClick={() => {
-                            const item: CartItem = {
-                                name: product.name,
-                                sectionId: product.sectionId,
-                                description: product.description,
-                                imageUrl: product.imageUrl,
-                                count: 1,
-                                variant: selectedVariant.name,
-                                cost: Number(selectedVariant.cost),
-                                removedIngredients: Array.from(removedIngredients),
-                                addons: selectedAddons.map(addon => addon.name),
-                            };
-                            addItem(item);
-                            onClose();
-                        }}
-                    >
-                        Добавить в корзину за {totalCostDisplay}
+                    <Button size="lg" variant="primary" onClick={handleSave}>
+                        {initialItem ? `Сохранить изменения за ${totalCostDisplay}` : `Добавить в корзину за ${totalCostDisplay}`}
                     </Button>
                 </div>
             </div>
