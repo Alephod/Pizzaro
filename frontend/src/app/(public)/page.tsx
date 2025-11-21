@@ -6,7 +6,6 @@ import { getMenuSections } from '@/lib/fetchMenu';
 
 export default async function Home() {
     const sections = await getMenuSections();
-    console.log(sections);
 
     return (
         <main className={clsx('container', styles.main)}>

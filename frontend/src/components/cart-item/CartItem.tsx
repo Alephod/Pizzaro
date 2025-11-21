@@ -11,6 +11,7 @@ import { ModalContext } from '@/providers/ModalProvider';
 import { ConfigureProductModal } from '@/components/configure-product-modal/ConfigureProductModal';
 import type { MenuSection } from '@/types/menu';
 import { cleanDescription } from '@/utils';
+import { useInfoModal } from '../info-modal/InfoModal';
 
 interface Ingredient {
     name: string;
@@ -27,6 +28,7 @@ interface CartItemProps {
 const MAX_COUNT = 30;
 
 export function CartItem({ item, onDecrease, onIncrease, onRemove }: CartItemProps) {
+    const { showInfo } = useInfoModal();
     const totalPrice = item.cost * item.count;
     const isMaxCount = item.count >= MAX_COUNT;
     const { openModal, closeModal } = useContext(ModalContext);
@@ -51,11 +53,15 @@ export function CartItem({ item, onDecrease, onIncrease, onRemove }: CartItemPro
             const section: MenuSection = await response.json();
 
             const product = section.items.find(p => p.name === item.name);
-            if (!product) throw new Error('Product not found');
+            if (!product) {
+                await showInfo(`Товар «${item.name}» был удалён из меню`, 'Не найдено');
+                return;
+            }
 
             openModal(<ConfigureProductModal product={product} schema={section.schema} initialItem={item} onClose={closeModal} />, 'center');
-        } catch (error) {
-            throw new Error('Failed to fetch section' + error);
+        } catch {
+            await showInfo('Не удалось открыть редактирование товара', 'Ошибка');
+            return;
         }
     };
 
