@@ -30,6 +30,12 @@
             background-color: #ff950b15;
         }
     }
+
+    .spinner {
+        border: 2px solid var(--primary);
+        border-top: 2px solid transparent;
+        
+    }
 }
 
 .danger {
@@ -39,6 +45,11 @@
         &:hover:not(:disabled) {
             background-color: #dd3c3c;
         }
+    }
+
+    .spinner {
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
     }
 }
 
@@ -61,4 +72,18 @@
 .button:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

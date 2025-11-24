@@ -53,3 +53,13 @@ model Product {
 
   @@map("menu_items")
 }
+
+model OtpCode {
+  id        Int      @id @default(autoincrement())
+  email     String
+  code      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([email]) // чтобы не было много кодов на один email
+}

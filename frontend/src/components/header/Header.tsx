@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button/Button';
 import clsx from 'clsx';
 import { ModalContext } from '@/providers/ModalProvider';
 import { Cart } from '@/components/cart/Cart';
+import { AuthModal } from '../auth-modal/AuthModal';
 
 interface HeaderProps {
     sections: MenuSection[];
@@ -69,6 +70,12 @@ export function Header({ sections }: HeaderProps) {
     const handleOpenCart = () => {
         openModal(<Cart isOpen={true} onClose={closeModal} />, 'right');
     };
+    const handleOpenEmailModal = () => {
+        const handleClose = () => {
+            closeModal();
+        };
+        openModal(<AuthModal onClose={handleClose} />);
+    };
 
     return (
         <>
@@ -79,7 +86,7 @@ export function Header({ sections }: HeaderProps) {
                             <Image width={150} height={57} className={style.logoImg} src="/logo.png" alt="logo" />
                         </Link>
 
-                        <Button type="button" size="md" variant="primary">
+                        <Button type="button" size="md" variant="primary" onClick={handleOpenEmailModal}>
                             <LogIn size={22} />
                             Войти
                         </Button>
