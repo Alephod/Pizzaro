@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
@@ -22,6 +24,7 @@ export function EmailModal({ onEmailSent }: EmailModalProps) {
   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserEmail(event.target.value);
     setEmailError(undefined);
+    setSubmitMessage(undefined);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -34,6 +37,7 @@ export function EmailModal({ onEmailSent }: EmailModalProps) {
 
     setIsSubmitting(true);
     setSubmitMessage(undefined);
+    setEmailError(undefined);
 
     try {
       const response = await fetch('/api/send-otp', {
@@ -43,14 +47,14 @@ export function EmailModal({ onEmailSent }: EmailModalProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка отправки');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error ?? 'Ошибка отправки');
       }
 
-      const data = await response.json();
-      setSubmitMessage(data.message || 'Код отправлен на ваш email');
+      const data = await response.json().catch(() => ({}));
+      setSubmitMessage((data && (data.message as string)) ?? 'Код отправлен на ваш email');
 
       onEmailSent(userEmail);
-
     } catch {
       setEmailError('Ошибка отправки. Попробуйте позже.');
     } finally {
@@ -62,20 +66,20 @@ export function EmailModal({ onEmailSent }: EmailModalProps) {
     <div className={styles.modalContent}>
       <h2 className={styles.title}>Введите ваш email</h2>
       <p className={styles.description}>Мы отправим код для входа на указанный адрес.</p>
-      
+
       <form onSubmit={handleSubmit} className={styles.form}>
         <Input
-          type="text"
+          type="email"
           placeholder="Ваш email"
           value={userEmail}
           onChange={handleEmailChange}
           error={!!emailError}
           className={styles.input}
         />
-        
+
         {emailError && <p className={styles.errorMessage}>{emailError}</p>}
         {submitMessage && <p className={styles.successMessage}>{submitMessage}</p>}
-        
+
         <div className={styles.actions}>
           <Button
             type="submit"

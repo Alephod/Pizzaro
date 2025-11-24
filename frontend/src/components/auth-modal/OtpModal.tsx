@@ -1,9 +1,10 @@
-// app/components/OtpModal.tsx
+'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import styles from './OtpModal.module.scss';
+import { signIn, type SignInResponse } from 'next-auth/react';
 
 interface OtpModalProps {
   email: string;
@@ -20,9 +21,8 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
   const [resendCountdown, setResendCountdown] = useState<number>(0);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
-  // Автофокус на первую пустую ячейку при любом изменении
   useEffect(() => {
     const firstEmptyIndex = otpDigits.findIndex(d => d === '');
     if (firstEmptyIndex !== -1 && !isSubmitting) {
@@ -30,78 +30,91 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
     }
   }, [otpDigits, isSubmitting]);
 
-  // Авто-сабмит когда все 6 цифр заполнены
-  useEffect(() => {
-    if (otpDigits.every(d => d !== '') && !isSubmitting && !otpError) {
-      formRef.current?.requestSubmit();
-    }
-  }, [otpDigits, isSubmitting, otpError]);
-
-  // Таймер для countdown
   useEffect(() => {
     if (resendCountdown > 0) {
-      const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+      const timer = setTimeout(() => setResendCountdown(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [resendCountdown]);
 
   const handleDigitChange = (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-
-    // Разрешаем только одну цифру или пустую строку
     if (value === '' || /^\d$/.test(value)) {
       const newDigits = [...otpDigits];
       newDigits[index] = value;
       setOtpDigits(newDigits);
       setOtpError(undefined);
+
+      // если все заполнено — сабмитим
+      if (newDigits.every(d => d !== '')) {
+        setTimeout(() => formRef.current?.requestSubmit(), 0);
+      } else {
+        if (value !== '' && index < inputRefs.current.length - 1) {
+          inputRefs.current[index + 1]?.focus();
+        }
+      }
     }
   };
 
   const handleKeyDown = (index: number) => (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Backspace' && otpDigits[index] === '' && index > 0) {
+    if (event.key === 'Backspace') {
+      if (otpDigits[index] === '' && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      } else {
+        // оставляем поведение по удалению символа
+      }
+    } else if (event.key === 'ArrowLeft' && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    } else if (event.key === 'ArrowRight' && index < inputRefs.current.length - 1) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
     const pasteData = event.clipboardData.getData('text').trim();
     if (/^\d{6}$/.test(pasteData)) {
-      setOtpDigits(pasteData.split(''));
+      const newDigits = pasteData.split('');
+      setOtpDigits(newDigits);
       event.preventDefault();
+      setTimeout(() => formRef.current?.requestSubmit(), 0);
     }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const otpCode = otpDigits.join('');
+    if (!/^\d{6}$/.test(otpCode)) {
+      setOtpError('Введите 6-значный код');
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitMessage(undefined);
+    setOtpError(undefined);
 
     try {
-      const response = await fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: otpCode }),
-      });
+      const result = (await signIn('otp', {
+        redirect: false,
+        email,
+        code: otpCode,
+      })) as SignInResponse | undefined;
 
-      if (!response.ok) {
-        throw new Error('Ошибка верификации');
+      if (!result) {
+        setOtpError('Сервер не ответил. Попробуйте снова.');
+        return;
       }
 
-      const data = await response.json();
-      setSubmitMessage(data.message || 'Успешный вход!');
+      if (result.error) {
+        setOtpError(result.error || 'Неверный код');
+        setOtpDigits(['', '', '', '', '', '']);
+        setTimeout(() => inputRefs.current[0]?.focus(), 0);
+        return;
+      }
 
-      localStorage.setItem('user', email);
-
-      setTimeout(onClose, 2000);
-    } catch (error) {
-      setOtpError('Неверный код или ошибка. Попробуйте позже.');
-      setOtpDigits(['', '', '', '', '', '']); 
-      // Сбрасываем фокус на первую пустую (или первую) ячейку
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 0);
+      onClose();
+    } catch {
+      setOtpError('Ошибка входа. Попробуйте позже.');
     } finally {
       setIsSubmitting(false);
     }
@@ -120,15 +133,14 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка повторной отправки');
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error ?? 'Ошибка повторной отправки');
       }
 
       setSubmitMessage('Код отправлен повторно');
-      // Очищаем поле для нового кода
       setOtpDigits(['', '', '', '', '', '']);
-      // Запускаем countdown
       setResendCountdown(60);
-    } catch (error) {
+    } catch {
       setOtpError('Ошибка отправки. Попробуйте позже.');
     } finally {
       setIsResending(false);
@@ -145,7 +157,7 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
       <p className={styles.description}>
         {email} <span className={styles.changeLink} onClick={handleChangeEmail}>Изменить</span>
       </p>
-      
+
       <form ref={formRef} onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.otpInputs} onPaste={handlePaste}>
           {otpDigits.map((digit, index) => (
@@ -163,10 +175,10 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
             />
           ))}
         </div>
-        
+
         {otpError && <p className={styles.errorMessage}>{otpError}</p>}
         {submitMessage && <p className={styles.successMessage}>{submitMessage}</p>}
-        
+
         <div className={styles.actions}>
           <Button
             type="button"
@@ -175,7 +187,6 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
             onClick={handleResend}
             disabled={isResending || isSubmitting || resendCountdown > 0}
             className={styles.resendButton}
-            loading={true}
           >
             {resendCountdown > 0 ? `Отправить еще раз (${resendCountdown})` : 'Отправить еще раз'}
           </Button>

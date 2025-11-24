@@ -1,13 +1,12 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/authOptions';
 import { redirect } from 'next/navigation';
+import { adminAuthOptions } from '@/lib/auth/admin';
 import { AdminLoginForm } from './AdminLoginForm';
-
 import style from './page.module.scss';
 import Image from 'next/image';
 
 export default async function AdminLoginPage() {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(adminAuthOptions);
 
     if (session) {
         redirect('/admin/dashboard');

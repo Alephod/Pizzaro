@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,7 +8,6 @@ datasource db {
   url      = "postgresql://admin:nimda@db:5432/pizzaro?schema=public"
 }
 
-
 model AdminUser {
   id           Int      @id @default(autoincrement())
   username     String   @unique
@@ -23,32 +16,37 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
 }
 
-model MenuSection {
-  id       Int      @id @default(autoincrement())
-  name     String
-  slug     String   @unique
-  schema   Json    
-  order    Int     
-  items    Product[]
-
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  data      Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MenuSection {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  schema    Json
+  order     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  items     Product[]
 
   @@map("menu_sections")
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   sectionId   Int
   name        String
   description String
   imageUrl    String
-  order       Int    // порядковый номер в секции
-  data        Json     // хранит варианты, цену, вес, калории и т.д.
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
+  data        Json
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  order       Int
   menuSection MenuSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@map("menu_items")
@@ -56,10 +54,8 @@ model Product {
 
 model OtpCode {
   id        Int      @id @default(autoincrement())
-  email     String
+  email     String   @unique
   code      String
   createdAt DateTime @default(now())
   expiresAt DateTime
-
-  @@unique([email]) // чтобы не было много кодов на один email
 }
