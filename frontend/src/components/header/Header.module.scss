@@ -101,3 +101,12 @@
         transform: translateX(0);
     }
 }
+
+.userProfile {
+    font-weight: 600;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+}

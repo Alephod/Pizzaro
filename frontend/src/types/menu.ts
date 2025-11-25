@@ -23,7 +23,7 @@ export interface Addon {
     cost: string; 
 }
 
-export type SectionSchema = {
+export interface SectionSchema {
     options: { name: string; addons: Addon[] }[]; 
 };
 

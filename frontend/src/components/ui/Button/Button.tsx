@@ -8,11 +8,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant: 'primary' | 'secondary' | 'tertiary' | 'danger';
     className?: string;
     disabled?: boolean;
+    loading?: boolean;
 }
 
-export function Button({ type = 'button', size, variant = 'primary', disabled = false, className, ...props }: ButtonProps) {
+export function Button({ type = 'button', size, variant = 'primary', disabled = false, loading = false, className, ...props }: ButtonProps) {
+    const isDisabled = disabled || loading;
+
     return (
-        <button className={clsx(styles.button, styles[variant], styles[size], className)} type={type} disabled={disabled} {...props}>
+        <button className={clsx(styles.button, styles[variant], styles[size], className)} type={type} disabled={isDisabled} {...props}>
+            {loading && <div className={styles.spinner} />} 
             {props.children}
         </button>
     );

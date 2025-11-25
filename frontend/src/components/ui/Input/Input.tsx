@@ -27,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className={clsx(styles.inputWrapper, className)}>
                 <div className={styles.inputContainer}>
-                    <input ref={ref} type={inputType} className={inputClass} disabled={disabled} placeholder={placeholder} value={type === 'file' ? undefined : value} onChange={onChange} {...rest} />
+                    <input ref={ref} type={inputType} className={inputClass} disabled={disabled} placeholder={placeholder} value={value} onChange={onChange} {...rest} />
                     {passwordAdornment}
                     {rightAdornment && <span className={styles.adornment}>{rightAdornment}</span>}
                 </div>

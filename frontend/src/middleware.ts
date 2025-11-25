@@ -13,8 +13,11 @@ export async function middleware(req: NextRequest) {
   const rawPath = url.pathname;
   const pathname = normalize(rawPath);
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: 'next-auth.admin.session-token',
+  });
 
   // Запретить любые вложенные /admin/login/*
   if (pathname.startsWith('/admin/login') && pathname !== '/admin/login') {
@@ -36,6 +39,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (!token) {
       const loginUrl = new URL('/admin/login', url.origin);
+      loginUrl.searchParams.set('from', url.pathname + url.search);
       return NextResponse.redirect(loginUrl);
     }
 
