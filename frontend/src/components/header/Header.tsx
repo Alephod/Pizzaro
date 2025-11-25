@@ -11,8 +11,7 @@ import clsx from 'clsx';
 import { ModalContext } from '@/providers/ModalProvider';
 import { Cart } from '@/components/cart/Cart';
 import { AuthModal } from '../auth-modal/AuthModal';
-import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import { useCart } from '@/providers/CartProvider';
 
@@ -23,8 +22,7 @@ interface HeaderProps {
 
 export function Header({ sections, session: initialSession }: HeaderProps) {
     const { openModal, closeModal } = useContext(ModalContext);
-    const { data: liveSession } = useSession(); // живой источник правды
-    const router = useRouter();
+    const { data: liveSession } = useSession(); 
 
     const { items } = useCart();
     const totalCount = useMemo(() => items.reduce((sum, it) => sum + (it.count || 0), 0), [items]);
@@ -88,11 +86,6 @@ export function Header({ sections, session: initialSession }: HeaderProps) {
             closeModal();
         };
         openModal(<AuthModal onClose={handleClose} />);
-    };
-
-    const handleSignOut = async () => {
-        await signOut({ redirect: false });
-        router.refresh();
     };
 
     return (

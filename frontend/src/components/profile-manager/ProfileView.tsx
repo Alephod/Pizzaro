@@ -13,7 +13,7 @@ interface ProfileViewProps {
   isLoading: boolean;
 }
 
-export default function ProfileView({ profile, onEdit, onSignOut, isLoading }: ProfileViewProps) {
+export default function ProfileView({ profile, onSignOut, isLoading }: ProfileViewProps) {
   const formattedDate = profile.dob
     ? new Date(profile.dob).toLocaleDateString('ru-RU')
     : '—';

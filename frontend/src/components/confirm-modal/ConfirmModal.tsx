@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useRef, useId } from 'react';
+import React, { useContext, useEffect, useId } from 'react';
 import { ModalContext } from '@/providers/ModalProvider';
 import { Button } from '@/components/ui/button/Button';
 import styles from './ConfirmModal.module.scss';

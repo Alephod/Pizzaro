@@ -9,7 +9,7 @@ import type { ProfileData } from '@/types/profile';
 import { useInfoModal } from '@/components/info-modal/InfoModal';
 import { getErrorMessage } from '@/utils';
 import { useConfirm } from '@/components/confirm-modal/ConfirmModal';
-import { Pencil, Save } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import ProfileEdit from './ProfileForm';
 import { useSession } from 'next-auth/react';
 

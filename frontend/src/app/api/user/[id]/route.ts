@@ -14,11 +14,6 @@ type UserProfileResponse = {
     };
 };
 
-
-function validateEmail(value: unknown): value is string {
-    return typeof value === 'string' && value.includes('@');
-}
-
 function isValidPhone(value: unknown): boolean {
     if (value === null || value === undefined || value === '') return true;
     if (typeof value !== 'string') return false;
@@ -158,8 +153,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         };
 
         return NextResponse.json(resp);
-    } catch (err) {
-        console.error('PATCH /api/user/:id error', err);
+    } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
@@ -176,8 +170,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
         await prisma.user.delete({ where: { id } });
         return new NextResponse(null, { status: 204 });
-    } catch (err) {
-        console.error('DELETE /api/user/:id error', err);
+    } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
