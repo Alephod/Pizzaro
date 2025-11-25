@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import style from './Header.module.scss';
 import Link from 'next/link';
-import { LogIn, ShoppingCart } from 'lucide-react';
+import { LogIn, ShoppingCart, UserRound } from 'lucide-react';
 import type { MenuSection } from '@/types/menu';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button/Button';
@@ -14,6 +14,7 @@ import { AuthModal } from '../auth-modal/AuthModal';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { Session } from 'next-auth';
+import { useCart } from '@/providers/CartProvider';
 
 interface HeaderProps {
     sections: MenuSection[];
@@ -25,6 +26,9 @@ export function Header({ sections, session: initialSession }: HeaderProps) {
     const { data: liveSession } = useSession(); // живой источник правды
     const router = useRouter();
 
+    const { items } = useCart();
+    const totalCount = useMemo(() => items.reduce((sum, it) => sum + (it.count || 0), 0), [items]);
+
     const displayedSession = liveSession ?? initialSession ?? null;
 
     const filteredSections = sections.filter((s) => s.items && s.items.length > 0);
@@ -32,6 +36,9 @@ export function Header({ sections, session: initialSession }: HeaderProps) {
     const headerRef = useRef<HTMLElement | null>(null);
     const bottomRowWrapperRef = useRef<HTMLDivElement | null>(null);
     const [isSticky, setIsSticky] = useState(false);
+    const [hydrated, setHydrated] = useState(false);
+
+    useEffect(() => setHydrated(true), []);
 
     useEffect(() => {
         const headerEl = headerRef.current;
@@ -100,14 +107,14 @@ export function Header({ sections, session: initialSession }: HeaderProps) {
                         <div className={style.actions}>
                             {displayedSession?.user?.email ? (
                                 <div className={style.userInfo}>
-                                    <span className={style.userEmail}>{displayedSession.user.email}</span>
-                                    <Button type="button" size="md" variant="secondary" onClick={handleSignOut}>
-                                        Выйти
-                                    </Button>
+                                    <Link href={'/profile'} className={style.userProfile}>
+                                        <UserRound size={24} />
+                                        {displayedSession.user.name !== '' ? displayedSession.user.name : 'Профиль'}
+                                    </Link>
                                 </div>
                             ) : (
                                     <Button type="button" size="md" variant="primary" onClick={handleOpenEmailModal}>
-                                        <LogIn size={22} />
+                                        <LogIn size={20} />
                                         Войти
                                     </Button>
                             )}
@@ -134,7 +141,7 @@ export function Header({ sections, session: initialSession }: HeaderProps) {
                     <div className={style.rightControls}>
                         <button onClick={handleOpenCart} className={style.cartBtn}>
                             <ShoppingCart size={22} />
-                            Корзина
+                            Корзина ({hydrated ? totalCount : 0})
                         </button>
                     </div>
                 </div>

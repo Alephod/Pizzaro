@@ -16,7 +16,7 @@ export function Button({ type = 'button', size, variant = 'primary', disabled = 
 
     return (
         <button className={clsx(styles.button, styles[variant], styles[size], className)} type={type} disabled={isDisabled} {...props}>
-            {loading && <div className={styles.spinner} />} {/* Маленький CSS-спиннер */}
+            {loading && <div className={styles.spinner} />} 
             {props.children}
         </button>
     );

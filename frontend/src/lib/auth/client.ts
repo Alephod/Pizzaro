@@ -3,15 +3,18 @@ import type { NextAuthOptions, Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 
-type UserFromAuthorize = {
+
+interface AuthorizedUser {
   id: string;
   email: string;
-};
+  name: string;
+}
 
-type ClientJWT = JWT & {
+interface ExtendedJwt extends JWT {
   id?: string;
   email?: string;
-};
+  name?: string;
+}
 
 export const clientAuthOptions: NextAuthOptions = {
   providers: [
@@ -25,39 +28,42 @@ export const clientAuthOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.code) return null;
 
-        // проверяем код в базе
-        const record = await prisma.otpCode.findUnique({
+        const otpRecord = await prisma.otpCode.findUnique({
           where: { email: credentials.email },
         });
 
-        if (!record) return null;
+        if (!otpRecord) return null;
 
-        const now = new Date();
-        if (record.expiresAt < now) return null;
-        if (record.code !== credentials.code) return null;
+        const currentTime = new Date();
+        if (otpRecord.expiresAt < currentTime) return null;
+        if (otpRecord.code !== credentials.code) return null;
 
-        // удалить использованный код
         await prisma.otpCode.delete({
           where: { email: credentials.email },
         });
 
-        // найти или создать пользователя
-        let user = await prisma.user.findUnique({
+        let existingUser = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: { email: credentials.email, data: {} },
+        if (!existingUser) {
+          existingUser = await prisma.user.create({
+            data: { email: credentials.email, data: { name: '' } },
           });
         }
 
-        return { id: user.id.toString(), email: user.email } as UserFromAuthorize;
+        let userName = '';
+        if (existingUser.data && typeof existingUser.data === 'object' && !Array.isArray(existingUser.data)) {
+          const profileData = existingUser.data;
+          if (typeof profileData.name === 'string') userName = profileData.name;
+        }
+
+        return { id: existingUser.id.toString(), email: existingUser.email, name: userName } as AuthorizedUser;
       },
     }),
   ],
 
-  session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 дней 
+  session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 дней
   jwt: { maxAge: 30 * 24 * 60 * 60 },
 
   cookies: {
@@ -73,29 +79,51 @@ export const clientAuthOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }) {
-      const t = token as ClientJWT;
+    async jwt({ token, user, trigger, session }) {
+      const extendedToken = token as ExtendedJwt;
+
       if (user) {
-        const u = user as UserFromAuthorize;
-        t.id = u.id;
-        t.email = u.email;
+        const authorizedUser = user as AuthorizedUser;
+        extendedToken.id = authorizedUser.id;
+        extendedToken.email = authorizedUser.email;
+        extendedToken.name = authorizedUser.name;
       }
-      return t;
+
+      // Поддержка обновления сессии (например, после изменения профиля)
+      if (trigger === 'update' && session?.name) {
+        // Здесь можно добавить логику перечитывания из БД по extendedToken.id, если нужно синхронизировать
+        // Но поскольку клиент передаёт актуальное значение, используем его напрямую
+        extendedToken.name = session.name;
+      }
+
+      return extendedToken;
     },
 
     async session({ session, token }) {
-      const t = token as ClientJWT;
+      const extendedToken = token as ExtendedJwt;
 
-      const normalizedEmail =
-        typeof t.email === 'string' ? t.email : typeof session.user?.email === 'string' ? session.user.email : undefined;
+      const userEmail =
+        typeof extendedToken.email === 'string'
+          ? extendedToken.email
+          : typeof session.user?.email === 'string'
+            ? session.user.email
+            : undefined;
 
-      const newUser: Session['user'] = {
+      const userName =
+        typeof extendedToken.name === 'string'
+          ? extendedToken.name
+          : typeof session.user?.name === 'string'
+            ? session.user.name
+            : '';
+
+      const updatedUser: Session['user'] = {
         ...session.user,
-        id: t.id,
-        email: normalizedEmail,
+        id: extendedToken.id,
+        email: userEmail,
+        name: userName,
       };
 
-      session.user = newUser;
+      session.user = updatedUser;
       return session;
     },
   },

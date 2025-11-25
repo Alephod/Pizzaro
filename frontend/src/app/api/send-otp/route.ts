@@ -19,13 +19,13 @@ export async function POST(req: NextRequest) {
 
     // Отправляем письмо — сохраняем в БД только после успешной отправки
     try {
-      await transporter.sendMail({
-        from: `"Pizzaro" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Код входа',
-        text: `Ваш код: ${code}\nДействителен 5 минут.`,
-        html: `<h2>Ваш код: <b>${code}</b></h2><p>Действителен 5 минут</p>`,
-      });
+      // await transporter.sendMail({
+      //   from: `"Pizzaro" <${process.env.EMAIL_USER}>`,
+      //   to: email,
+      //   subject: 'Код входа',
+      //   text: `Ваш код: ${code}\nДействителен 5 минут.`,
+      //   html: `<h2>Ваш код: <b>${code}</b></h2><p>Действителен 5 минут</p>`,
+      // });
     } catch (sendErr) {
       console.error('Ошибка отправки email (sendMail):', sendErr);
       // Не сохраняем код в БД, возвращаем ошибку отправки

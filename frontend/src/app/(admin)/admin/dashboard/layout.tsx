@@ -16,7 +16,7 @@ export default async function AdminLayout({
     return (
         <div className={style.wrapper}>
             <DashboardAside username={username} />
-            <div className={style.content}>{children}</div>
+            {children}
         </div>
     );
 }
