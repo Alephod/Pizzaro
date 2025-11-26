@@ -4,9 +4,10 @@ import { OtpModal } from './OtpModal';
 
 interface AuthModalProps {
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function AuthModal({ onClose }: AuthModalProps) {
+export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   return userEmail ? (
@@ -14,6 +15,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
       email={userEmail} 
       onClose={onClose} 
       onBackToEmail={() => setUserEmail(null)} 
+      onSuccess={onSuccess}
     />
   ) : (
     <EmailModal

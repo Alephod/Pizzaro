@@ -10,9 +10,10 @@ interface OtpModalProps {
   email: string;
   onClose: () => void;
   onBackToEmail: () => void;
+  onSuccess?: () => void;
 }
 
-export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
+export function OtpModal({ email, onClose, onBackToEmail, onSuccess }: OtpModalProps) {
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -112,7 +113,11 @@ export function OtpModal({ email, onClose, onBackToEmail }: OtpModalProps) {
         return;
       }
 
-      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch {
       setOtpError('Ошибка входа. Попробуйте позже.');
     } finally {

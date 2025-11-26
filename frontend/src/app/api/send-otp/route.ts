@@ -83,13 +83,13 @@ export async function POST(req: NextRequest) {
 
     // Отправляем письмо — сохраняем в БД только после успешной отправки
     try {
-      await transporter.sendMail({
-        from: `"Pizzaro" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Код входа',
-        text: `Ваш код: ${code}\nДействителен 5 минут.`,
-        html: getEmailHtml(code),
-      });
+      // await transporter.sendMail({
+      //   from: `"Pizzaro" <${process.env.EMAIL_USER}>`,
+      //   to: email,
+      //   subject: 'Код входа',
+      //   text: `Ваш код: ${code}\nДействителен 5 минут.`,
+      //   html: getEmailHtml(code),
+      // });
     } catch {
       return NextResponse.json({ error: 'Ошибка отправки email' }, { status: 500 });
     }
