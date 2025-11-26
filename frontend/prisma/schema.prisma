@@ -59,3 +59,24 @@ model OtpCode {
   createdAt DateTime @default(now())
   expiresAt DateTime
 }
+
+enum OrderStatus {
+  Принято
+  Готовится
+  Доставляется
+  Доставлено
+}
+
+model Order {
+  id             String      @id
+  customerName    String
+  phone          String
+  address        String
+  deliveryTime    String
+  paymentMethod   String
+  items          Json
+  total          Int
+  status         OrderStatus  @default(Принято)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}

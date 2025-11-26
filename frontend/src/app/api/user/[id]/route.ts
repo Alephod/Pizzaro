@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+import type { OrderData } from '@/types/order';
 
 type UserProfileResponse = {
     id: number;
@@ -11,13 +11,13 @@ type UserProfileResponse = {
         phone: string | null;
         dob: string | null;
         addresses: string[];
+        orders: OrderData[]; 
     };
 };
 
 function isValidPhone(value: unknown): boolean {
     if (value === null || value === undefined || value === '') return true;
     if (typeof value !== 'string') return false;
-    // простой regex для номеров (можно расширить под нужды)
     return /^[+\d][\d\s\-()]{4,}$/.test(value);
 }
 
@@ -47,7 +47,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
     if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // normalize data
     const userData = (user.data && typeof user.data === 'object' ? user.data : {}) as Record<string, unknown>;
 
     const response: UserProfileResponse = {
@@ -58,6 +57,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
             phone: typeof userData.phone === 'string' ? userData.phone : null,
             dob: typeof userData.dob === 'string' ? userData.dob : null,
             addresses: Array.isArray(userData.addresses) ? (userData.addresses as string[]) : [],
+            orders: Array.isArray(userData.orders) ? (userData.orders as OrderData[]) : [], // <- важно
         },
     };
 
@@ -75,7 +75,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
     }
 
-    
     const incoming = body as {
         name?: unknown;
         phone?: unknown;
@@ -114,7 +113,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 });
     }
 
-    // Build data update object
     const toUpdate: Record<string, unknown> = {};
     if (incoming.name !== undefined) toUpdate.name = (incoming.name as string).trim();
     if (incoming.phone !== undefined) toUpdate.phone = incoming.phone === '' ? null : (incoming.phone as string);
@@ -123,11 +121,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     try {
         const user = await prisma.user.findUnique({ where: { id } });
-        const existingData = (user?.data && typeof user.data === 'object') ? user.data as Record<string, unknown> : {};
+        const existingData = (user?.data && typeof user.data === 'object') ? (user.data as Record<string, unknown>) : {};
 
         const newData = { ...existingData, ...toUpdate };
 
-        // нормализуем addresses 
         if (Array.isArray(newData.addresses)) {
             newData.addresses = (newData.addresses as unknown[]).map(String);
         }
@@ -137,11 +134,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const updated = await prisma.user.update({
             where: { id },
             data: {
-                data: prismaData, 
+                data: prismaData,
             },
         });
 
-        const resp = {
+        const resp: UserProfileResponse = {
             id: updated.id,
             email: updated.email,
             data: {
@@ -149,8 +146,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 phone: typeof newData.phone === 'string' ? newData.phone : null,
                 dob: typeof newData.dob === 'string' ? newData.dob : null,
                 addresses: Array.isArray(newData.addresses) ? (newData.addresses as string[]) : [],
-            },
-        };
+              orders: Array.isArray(newData.orders) ? (newData.orders as OrderData[]) : [],
+          },
+      };
 
         return NextResponse.json(resp);
     } catch {

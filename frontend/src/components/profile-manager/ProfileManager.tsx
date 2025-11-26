@@ -51,6 +51,7 @@ export default function ProfileManager({ initialProfile }: { initialProfile: Pro
         phone: result.data.phone ?? null,
         dob: result.data.dob ?? null,
         addresses: Array.isArray(result.data.addresses) ? result.data.addresses : [],
+        orders: result.orders
       };
       setCurrentProfile(updatedProfile);
       setIsEditing(false);
