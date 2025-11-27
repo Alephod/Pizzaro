@@ -50,3 +50,38 @@ export async function POST(request: Request) {
 
   return Response.json({ id }, { status: 201 });
 }
+
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const pageParam = Number(url.searchParams.get('page') ?? '1');
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  const TAKE = 20;
+  const skip = (page - 1) * TAKE;
+
+  // одновременно получаем список и общее количество для пагинации
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: TAKE,
+    }),
+    prisma.order.count(),
+  ]);
+
+  const totalPages = Math.ceil(total / TAKE);
+
+  return Response.json(
+    {
+      orders,
+      meta: {
+        total,
+        page,
+        totalPages,
+        perPage: TAKE,
+      },
+    },
+    { status: 200 }
+  );
+}

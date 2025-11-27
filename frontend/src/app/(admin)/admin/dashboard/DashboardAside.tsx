@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, EllipsisVertical, LogOut, Settings } from 'lucide-react';
-import { Utensils } from 'lucide-react';
+import { Utensils, ShoppingCart } from 'lucide-react';
 import style from './layout.module.scss';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,8 +22,13 @@ interface NavItem {
 const navItems: NavItem[] = [
     {
         name: 'Меню',
-        href: '/menu',
+        href: '/admin/dashboard/menu',
         icon: Utensils,
+    },
+    {
+        name: 'Заказы',
+        href: '/admin/dashboard/orders',
+        icon: ShoppingCart,
     },
 ];
 
@@ -31,7 +36,6 @@ export default function DashboardAside({ username }: AsideProps) {
     const [isAsideClosed, setIsAsideClosed] = useState(false);
     const [isPopupMenuOpen, setIsPopupMenuOpen] = useState(false);
 
-    const pathname = usePathname();
 
     const popupMenuRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +65,7 @@ export default function DashboardAside({ username }: AsideProps) {
             {navItems.map(item => {
                 const Icon = item.icon;
                 return (
-                    <Link className={style.link} key={item.name} href={pathname + item.href} data-label={item.name}>
+                    <Link className={style.link} key={item.name} href={item.href} data-label={item.name}>
                         <Icon className={style.icon} />
                         <span>{item.name}</span>
                     </Link>
