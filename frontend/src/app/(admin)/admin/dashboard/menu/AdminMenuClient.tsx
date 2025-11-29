@@ -24,6 +24,7 @@ export default function AdminMenuClient({ sectionsData }: Props) {
 
     const [sections, setSections] = useState<MenuSection[]>(sectionsData);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [backupSections, setBackupSections] = useState<MenuSection[] | null>(null);
     const [collapsedSectionIds, setCollapsedSectionIds] = useState<Set<number>>(new Set());
 
@@ -72,13 +73,14 @@ export default function AdminMenuClient({ sectionsData }: Props) {
 
     // API helpers
     async function createSectionApi(payload: { name: string; slug: string; schema: SectionSchema; order?: number }) {
-        const res = await fetch('/api/menu-section', {
+        return fetch('/api/menu-section', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
+        }).then(res => {
+            if (!res.ok) throw new Error('Failed to create section');
+            return res.json() as Promise<MenuSection>;
         });
-        if (!res.ok) throw new Error('Failed to create section');
-        return (await res.json()) as MenuSection;
     }
 
     async function updateSectionApi(id: number, payload: { name: string; slug: string; schema: SectionSchema; order?: number }) {
@@ -124,12 +126,13 @@ export default function AdminMenuClient({ sectionsData }: Props) {
     }
 
     const saveChanges = async () => {
+        setIsSaving(true);
         try {
             const tempToReal = new Map<number, number>();
 
             // 1) create sections
             for (const sec of pendingSectionsCreate) {
-                const payload = { name: sec.name, slug: sec.slug, schema: sec.schema ?? { options: [] }, order: sec.order ?? sec.order ?? 999 };
+                const payload = { name: sec.name, slug: sec.slug, schema: sec.schema ?? { options: [] }, order: sec.order ?? 999 };
                 const created = await createSectionApi(payload);
                 tempToReal.set(sec.id, created.id);
                 // replace in local state
@@ -207,7 +210,6 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                 if (!res.ok) {
                     const txt = await res.text().catch(() => 'unknown');
                     void showInfo(`Не удалось очистить временные файлы: ${txt}`, 'Внимание');
-                } else {
                 }
             } catch (err) {
                 void showInfo(`Ошибка при очистке временных файлов: ${getErrorMessage(err)}`, 'Внимание');
@@ -225,10 +227,11 @@ export default function AdminMenuClient({ sectionsData }: Props) {
             setIsEditing(false);
             setBackupSections(null);
 
-            // show success modal
             await showInfo('Изменения успешно сохранены', 'Готово');
         } catch (err) {
             await showInfo(`Ошибка при сохранении: ${getErrorMessage(err)}`, 'Ошибка');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -242,8 +245,6 @@ export default function AdminMenuClient({ sectionsData }: Props) {
             if (!res.ok) {
                 const txt = await res.text().catch(() => 'unknown');
                 void showInfo(`Не удалось очистить временные файлы: ${txt}`, 'Внимание');
-            } else {
-                // ok
             }
         } catch (err) {
             void showInfo(`Ошибка при очистке временных файлов: ${getErrorMessage(err)}`, 'Внимание');
@@ -421,8 +422,8 @@ export default function AdminMenuClient({ sectionsData }: Props) {
                     <h1>Меню</h1>
                     {isEditing ? (
                         <div className={style.actions}>
-                            <Button size="md" variant="primary" onClick={saveChanges}>
-                                <Save size={20} /> Сохранить
+                            <Button loading={isSaving} disabled={isSaving} size="md" variant="primary" onClick={saveChanges}>
+                                {!isSaving && <Save size={20} />} Сохранить
                             </Button>
                             <Button size="md" variant="secondary" onClick={cancelChanges}>
                                 Отменить

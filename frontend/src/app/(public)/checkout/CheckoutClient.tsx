@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input/Input';
 import { Select } from '@/components/ui/select/Select';
 import { RadioGroup } from '@/components/ui/radio/Radio';
 import { TimeSlots } from '@/components/time-slots/TimeSlots';
-import { normalizePrice } from '@/utils';
+import { getErrorMessage, normalizePrice } from '@/utils';
 import type { ProfileDataFromDB } from '@/types/profile';
 import styles from './Checkout.module.scss';
 import clsx from 'clsx';
+import { useInfoModal } from '@/components/info-modal/InfoModal';
 
 interface CheckoutClientProps {
     initialProfile: ProfileDataFromDB;
@@ -19,6 +20,7 @@ interface CheckoutClientProps {
 
 export default function CheckoutClient({ initialProfile }: CheckoutClientProps) {
     const router = useRouter();
+    const { showInfo } = useInfoModal();
     const { items, clear } = useCart();
 
     const [profile] = useState<ProfileDataFromDB>(initialProfile);
@@ -122,8 +124,7 @@ export default function CheckoutClient({ initialProfile }: CheckoutClientProps) 
             clear();
             router.push(`/order/${id}`);
         } catch (error) {
-            console.error('Ошибка оформления заказа:', error);
-            alert('Не удалось оформить заказ. Попробуйте ещё раз.');
+            void showInfo(`Не удалось оформить заказ: ${getErrorMessage(error)}`, 'Ошибка');
             setIsPlacingOrder(false);
         }
     };

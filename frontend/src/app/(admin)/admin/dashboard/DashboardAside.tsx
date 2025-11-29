@@ -6,7 +6,6 @@ import style from './layout.module.scss';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState, type ElementType } from 'react';
-import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 interface AsideProps {

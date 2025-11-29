@@ -89,10 +89,8 @@ export const clientAuthOptions: NextAuthOptions = {
         extendedToken.name = authorizedUser.name;
       }
 
-      // Поддержка обновления сессии (например, после изменения профиля)
+      // Поддержка обновления сессии 
       if (trigger === 'update' && session?.name) {
-        // Здесь можно добавить логику перечитывания из БД по extendedToken.id, если нужно синхронизировать
-        // Но поскольку клиент передаёт актуальное значение, используем его напрямую
         extendedToken.name = session.name;
       }
 

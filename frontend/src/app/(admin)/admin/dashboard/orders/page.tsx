@@ -1,10 +1,9 @@
-// app/orders/page.tsx
 import React from 'react';
 import OrdersList from './OrdersList';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Все заказы',
+  title: 'Заказы — Pizzaro Admin',
 };
 
 export default async function OrdersPage() {

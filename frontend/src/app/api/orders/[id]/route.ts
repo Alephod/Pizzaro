@@ -1,4 +1,3 @@
-// app/api/orders/[id]/route.ts
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { adminAuthOptions } from '@/lib/auth/admin';
@@ -8,7 +7,6 @@ interface PatchBody {
 }
 
 
-// GET — публичный 
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } }

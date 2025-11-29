@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   const id = generateOrderId();
 
-  const order = await prisma.order.create({
+  await prisma.order.create({
     data: {
       id,
       customerName: body.customerName,
@@ -60,7 +60,6 @@ export async function GET(request: Request) {
   const TAKE = 20;
   const skip = (page - 1) * TAKE;
 
-  // одновременно получаем список и общее количество для пагинации
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
       orderBy: { createdAt: 'desc' },

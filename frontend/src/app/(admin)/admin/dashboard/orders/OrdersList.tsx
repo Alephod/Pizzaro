@@ -1,9 +1,10 @@
-// components/orders/OrdersList.tsx
 'use client';
 import React, { useState } from 'react';
 import OrderCardAdmin from '@/components/order-card-admin/OrderCardAdmin';
 import type { OrderData } from '@/types/order';
 import styles from '@/components/order-card/OrderCard.module.scss';
+import { useInfoModal } from '@/components/info-modal/InfoModal';
+import { getErrorMessage } from '@/utils';
 
 type Meta = {
   page: number;
@@ -13,6 +14,8 @@ type Meta = {
 };
 
 export default function OrdersList({ initialOrders, initialMeta } : { initialOrders: OrderData[]; initialMeta: Meta }) {
+  const { showInfo } = useInfoModal();
+
   const [orders, setOrders] = useState<OrderData[]>(initialOrders ?? []);
   const [meta, setMeta] = useState<Meta>(initialMeta ?? { page: 1, totalPages: 1, total: 0, perPage: 20 });
   const [loading, setLoading] = useState(false);
@@ -30,14 +33,12 @@ export default function OrdersList({ initialOrders, initialMeta } : { initialOrd
       setOrders((prev) => [...prev, ...json.orders]);
       setMeta(json.meta);
     } catch (err) {
-      console.error('loadMore error', err);
-      // можно показать уведомление — не делаю лишней логики
+      void showInfo(`loadMore error: ${getErrorMessage(err)}`, 'Ошибка');
     } finally {
       setLoading(false);
     }
   };
 
-  // update single order in local list (used by карточка после изменения статуса)
   const updateOrderLocally = (id: string, patch: Partial<OrderData>) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)));
   };

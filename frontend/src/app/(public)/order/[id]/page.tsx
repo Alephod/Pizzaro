@@ -1,11 +1,31 @@
 import { prisma } from '@/lib/prisma';
 import OrderDetails from './OrderDetails';
 import type { OrderData, OrderItem, OrderStatus } from '@/types/order';
+import type { Metadata } from 'next';
 
 interface OrderPageParams {
   params: { id: string };
 }
 
+// Динамический title
+export async function generateMetadata({ params }: OrderPageParams): Promise<Metadata> {
+  const order = await prisma.order.findUnique({
+    where: { id: params.id },
+    select: { id: true },
+  });
+
+  if (!order) {
+    return {
+      title: 'Заказ не найден — Pizzaro',
+    };
+  }
+
+  return {
+    title: `Заказ №${order.id} — Pizzaro`,
+  };
+}
+
+// Твой основной компонент (остаётся почти без изменений)
 function normalizeItems(value: unknown): OrderItem[] {
   if (!Array.isArray(value)) return [];
   return value

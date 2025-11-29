@@ -1,12 +1,12 @@
-// components/orders/OrderCardAdmin.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import styles from './OrderCardAdmin.module.scss';
-import { normalizePrice } from '@/utils';
+import { getErrorMessage, normalizePrice } from '@/utils';
 import type { OrderData } from '@/types/order';
 import { ArrowRight, Pencil, Check, UtensilsCrossed, Truck, PackageCheck } from 'lucide-react';
 import { Button } from '../ui/button/Button';
+import { useInfoModal } from '../info-modal/InfoModal';
 
 const STATUS_ORDER: OrderData['status'][] = ['Принято', 'Готовится', 'Доставляется', 'Доставлено'];
 
@@ -37,6 +37,7 @@ export default function OrderCardAdmin({
   order: OrderData;
   onUpdate?: (id: string, patch: Partial<OrderData>) => void;
 }) {
+  const { showInfo } = useInfoModal();
   const [isSaving, setIsSaving] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [created, setCreated] = useState('');
@@ -62,9 +63,8 @@ export default function OrderCardAdmin({
     try {
       await patchStatus(order.id, next);
     } catch (err) {
-      console.error(err);
+      void showInfo(`Не удалось обновить статус: ${getErrorMessage(err)}`, 'Ошибка');
       onUpdate?.(order.id, { status: order.status, updatedAt: order.updatedAt });
-      alert('Не удалось обновить статус');
     } finally {
       setIsSaving(false);
     }
@@ -82,9 +82,8 @@ export default function OrderCardAdmin({
       await patchStatus(order.id, status);
       setShowEditor(false);
     } catch (err) {
-      console.error(err);
+      void showInfo(`Не удалось сохранить статус: ${getErrorMessage(err)}`, 'Ошибка');
       onUpdate?.(order.id, { status: prev, updatedAt: order.updatedAt });
-      alert('Не удалось сохранить статус');
     } finally {
       setIsSaving(false);
     }

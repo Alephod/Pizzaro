@@ -11,7 +11,7 @@ import OrderCard from '@/components/order-card/OrderCard';
 import type { OrderData } from '@/types/order';
 
 export const metadata: Metadata = {
-  title: 'Профиль пользователя',
+  title: 'Профиль пользователя — Pizzaro',
 };
 
 export default async function UserPage() {

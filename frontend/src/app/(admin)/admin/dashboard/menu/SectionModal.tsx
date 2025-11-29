@@ -99,44 +99,48 @@ const AddonSelector: React.FC<{
     return (
         <div className={clsx(commonStyle.form, style.addonSelector)}>
             <h3 className={commonStyle.title}>Добавки для текущего варианта</h3>
-            <div className={style.addonWrapper}>
-                {availableToChoose.map(addon => {
-                    const selectedAddon = localAddons.find(item => item.name === addon.name);
-                    const isSelected = !!selectedAddon;
+            {availableToChoose.length === 0 ? <p>Нет доступных добавок</p> : (
+                <div className={style.addonWrapper}>
 
-                    return (
-                        <div key={addon.name} className={clsx(style.addonItem, isSelected && style.addonItemSelected)} onClick={() => toggleAddon(addon)}>
-                            <div>
-                                <div className={style.addonInfo}>
-                                    <Image src={addon.imageUrl} alt={addon.name} width={50} height={50} />
-                                    <span className={style.addonName}>{addon.name}</span>
+                    {availableToChoose.map(addon => {
+                        const selectedAddon = localAddons.find(item => item.name === addon.name);
+                        const isSelected = !!selectedAddon;
+
+                        return (
+                            <div key={addon.name} className={clsx(style.addonItem, isSelected && style.addonItemSelected)} onClick={() => toggleAddon(addon)}>
+                                <div>
+                                    <div className={style.addonInfo}>
+                                        <Image src={addon.imageUrl} alt={addon.name} width={50} height={50} />
+                                        <span className={style.addonName}>{addon.name}</span>
+                                    </div>
+
+                                    {isSelected && (
+                                        <>
+                                            <span>—</span>
+                                            <Input
+                                                className={style.priceInput}
+                                                placeholder="Цена"
+                                                value={selectedAddon?.cost ?? ''}
+                                                onChange={(e: ChangeEvent<HTMLInputElement>) => updateCost(addon.name, e.target.value)}
+                                                onClick={(e: MouseEvent<HTMLInputElement>) => e.stopPropagation()}
+                                                ref={(el: HTMLInputElement | null) => {
+                                                    if (el) {
+                                                        costInputRefs.current.set(addon.name, el);
+                                                    } else {
+                                                        costInputRefs.current.delete(addon.name);
+                                                    }
+                                                }}
+                                            />
+                                        </>
+                                    )}
                                 </div>
-
-                                {isSelected && (
-                                    <>
-                                        <span>—</span>
-                                        <Input
-                                            className={style.priceInput}
-                                            placeholder="Цена"
-                                            value={selectedAddon?.cost ?? ''}
-                                            onChange={(e: ChangeEvent<HTMLInputElement>) => updateCost(addon.name, e.target.value)}
-                                            onClick={(e: MouseEvent<HTMLInputElement>) => e.stopPropagation()}
-                                            ref={(el: HTMLInputElement | null) => {
-                                                if (el) {
-                                                    costInputRefs.current.set(addon.name, el);
-                                                } else {
-                                                    costInputRefs.current.delete(addon.name);
-                                                }
-                                            }}
-                                        />
-                                    </>
-                                )}
+                                <Checkbox isChecked={isSelected} onToggle={() => toggleAddon(addon)} />
                             </div>
-                            <Checkbox isChecked={isSelected} onToggle={() => toggleAddon(addon)} />
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
+
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '12px' }}>
                 <Button size="md" variant="secondary" onClick={closeModal}>

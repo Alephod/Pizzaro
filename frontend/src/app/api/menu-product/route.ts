@@ -12,7 +12,6 @@ export async function GET() {
 export async function POST(req: Request) {
     const body = await req.json();
 
-    // если пришёл temp-путь — перемещаем его в /public/uploads и получаем финальный путь
     const finalImageUrl = await moveTempToUploads(body.imageUrl);
 
     const item = await prisma.product.create({

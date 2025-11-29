@@ -4,6 +4,11 @@ import { clientAuthOptions } from '@/lib/auth/client';
 import CheckoutClient from './CheckoutClient';
 import type { ProfileDataFromDB } from '@/types/profile';
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Оформление заказа — Pizzaro',
+};
 
 async function getProfile(userId: string): Promise<ProfileDataFromDB> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/${userId}`, {
