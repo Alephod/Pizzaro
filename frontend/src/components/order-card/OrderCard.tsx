@@ -33,7 +33,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<Orde
 
 export default function OrderCard({ order }: { order: OrderData }) {
     const { data: currentOrder } = useSWR<OrderData>(`/api/orders/${order.id}`, fetcher, {
-        refreshInterval: 5000, 
+        refreshInterval: 5000,
         fallbackData: order,
     });
 
@@ -43,7 +43,13 @@ export default function OrderCard({ order }: { order: OrderData }) {
 
     useEffect(() => {
         const createdAt = currentOrder?.createdAt ?? order.createdAt;
-        setCreated(new Date(createdAt).toLocaleString('ru-RU'));
+        setCreated(new Date(createdAt).toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+        }));
     }, [currentOrder?.createdAt, order.createdAt]);
 
     return (

@@ -80,6 +80,44 @@ export default function ProfileEdit({
     return Object.keys(newErrors).length === 0;
   };
 
+  const validatePhone = () => {
+    const newErrors: Errors = {};
+    if (phone) {
+      const digits = onlyDigits(phone);
+      const normalized = digits.startsWith('8') ? '7' + digits.slice(1) : digits;
+      if (normalized.length !== 11 || !normalized.startsWith('7')) {
+        newErrors.phone = 'Некорректный номер телефона';
+      }
+    }
+    setErrors(prev => ({ ...prev, ...newErrors }));
+  };
+
+  const validateDateOfBirth = () => {
+    const newErrors: Errors = {};
+    if (dateOfBirth) {
+      const digits = onlyDigits(dateOfBirth);
+      if (digits.length !== 8) {
+        newErrors.dateOfBirth = 'Формат: ДД.ММ.ГГГГ';
+      } else {
+        const day = +digits.slice(0, 2);
+        const month = +digits.slice(2, 4);
+        const year = +digits.slice(4);
+        const date = new Date(year, month - 1, day);
+        if (
+          date.getDate() !== day ||
+          date.getMonth() + 1 !== month ||
+          date.getFullYear() !== year ||
+          date > new Date()
+        ) {
+          newErrors.dateOfBirth = 'Некорректная дата';
+        } else if ((new Date().getFullYear() - year) < 14) {
+          newErrors.dateOfBirth = 'Возраст должен быть от 14 лет';
+        }
+      }
+    }
+    setErrors(prev => ({ ...prev, ...newErrors }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -124,7 +162,13 @@ export default function ProfileEdit({
         <div className={styles.field}>
           <Input
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={e => {
+              const value = e.target.value;
+              if (/^[0-9+-]*$/.test(value)) {
+                setPhone(value);
+              }
+            }}
+            onBlur={validatePhone}
             error={!!errors.phone}
             errorMessage={errors.phone}
             placeholder="Номер телефона"
@@ -134,7 +178,13 @@ export default function ProfileEdit({
         <div className={styles.field}>
           <Input
             value={dateOfBirth}
-            onChange={e => setDateOfBirth(e.target.value)}
+            onChange={e => {
+              const value = e.target.value;
+              if (/^[0-9.]*$/.test(value)) {
+                setDateOfBirth(value);
+              }
+            }}
+            onBlur={validateDateOfBirth}
             error={!!errors.dateOfBirth}
             errorMessage={errors.dateOfBirth}
             placeholder="Дата рождения"

@@ -15,9 +15,12 @@ export default async function OrdersPage() {
   const json = await res.json();
 
   return (
-    <main className="container" style={{ padding: '24px 0' }}>
-      <h1>Все заказы</h1>
-      <OrdersList initialOrders={json.orders} initialMeta={json.meta} />
+    <main style={{ 'paddingTop': '24px', 'overflowY': 'scroll', 'flexGrow': '1', 'transition': '0.3s' }}>
+      <div className='container'>
+        <h1>Все заказы</h1>
+        <OrdersList initialOrders={json.orders} initialMeta={json.meta} />
+      </div>
+
     </main>
   );
 }
