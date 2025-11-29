@@ -5,6 +5,10 @@ import { AdminLoginForm } from './AdminLoginForm';
 import style from './page.module.scss';
 import Image from 'next/image';
 
+export const metadata = {
+    title: 'Вход в админ-панель — Pizzaro',
+};
+
 export default async function AdminLoginPage() {
     const session = await getServerSession(adminAuthOptions);
 

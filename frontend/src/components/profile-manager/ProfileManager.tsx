@@ -10,7 +10,7 @@ import { useInfoModal } from '@/components/info-modal/InfoModal';
 import { getErrorMessage } from '@/utils';
 import { useConfirm } from '@/components/confirm-modal/ConfirmModal';
 import { Pencil } from 'lucide-react';
-import ProfileEdit from './ProfileForm';
+import ProfileEdit from './ProfileEdit';
 import { useSession } from 'next-auth/react';
 
 export default function ProfileManager({ initialProfile }: { initialProfile: ProfileData }) {
@@ -51,6 +51,7 @@ export default function ProfileManager({ initialProfile }: { initialProfile: Pro
         phone: result.data.phone ?? null,
         dob: result.data.dob ?? null,
         addresses: Array.isArray(result.data.addresses) ? result.data.addresses : [],
+        orders: result.orders
       };
       setCurrentProfile(updatedProfile);
       setIsEditing(false);

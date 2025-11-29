@@ -11,3 +11,12 @@
   color: var(--colorText);
   font-size: 22px;
 }
+
+.orders {
+  flex-grow: 1;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}

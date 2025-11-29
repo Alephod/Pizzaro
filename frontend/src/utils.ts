@@ -12,5 +12,14 @@ export function resolveImageSrc(src?: string | null) {
 export const normalizePrice = (price: number) => `${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)} ₽`;
 
 export const cleanDescription = (text: string): string => {
-        return text.replace(/\s*\[[xх]\]\s*/gi, '');
-    };
+    return text.replace(/\s*\[[xх]\]\s*/gi, '');
+};
+
+export const generateOrderId = () => {
+    const characters = '0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+};

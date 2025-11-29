@@ -7,24 +7,20 @@ import { clientAuthOptions } from '@/lib/auth/client';
 import { redirect, notFound } from 'next/navigation';
 import type { ProfileData } from '@/types/profile';
 import clsx from 'clsx';
+import OrderCard from '@/components/order-card/OrderCard';
+import type { OrderData } from '@/types/order';
 
 export const metadata: Metadata = {
-  title: 'Профиль пользователя',
+  title: 'Профиль пользователя — Pizzaro',
 };
-
-
 
 export default async function UserPage() {
   const session = await getServerSession(clientAuthOptions);
 
-  if (!session?.user?.id) {
-    redirect('/');
-  }
+  if (!session?.user?.id) redirect('/');
 
   const userId = Number(session.user.id);
-  if (!Number.isInteger(userId) || userId <= 0) {
-    notFound();
-  }
+  if (!Number.isInteger(userId) || userId <= 0) notFound();
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/${userId}`, { cache: 'no-store' });
 
@@ -40,14 +36,42 @@ export default async function UserPage() {
     name: typeof json.data?.name === 'string' ? json.data.name : '',
     phone: typeof json.data?.phone === 'string' ? json.data.phone : null,
     dob: typeof json.data?.dob === 'string' ? json.data.dob : null,
-    addresses: Array.isArray(json.data?.addresses) ? json.data!.addresses : [],
+    addresses: Array.isArray(json.data?.addresses) ? json.data.addresses : [],
+    orders: Array.isArray(json.data?.orders) ? json.data.orders : [],
   };
+
+  const orderIds = [...profile.orders].reverse().slice(0, 5);
+
+  const orders: OrderData[] = [];
+  for (const id of orderIds) {
+    const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
+      cache: 'no-store',
+    });
+
+    if (orderRes.ok) {
+      const orderJson = await orderRes.json();
+      orders.push(orderJson as OrderData);
+    }
+  }
+
+
 
   return (
     <main className={clsx(styles.page, 'container')}>
-        <ProfileManager initialProfile={profile} />
+      <ProfileManager initialProfile={profile} />
+
       <div className={styles.orders}>
         <h1>Мои заказы</h1>
+
+        {orders.length === 0 ? (
+          <p className={styles.empty}>У вас пока нет заказов</p>
+        ) : (
+          <div className={styles.list}>
+            {orders.map((order, index) => (
+              <OrderCard key={index} order={order} />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

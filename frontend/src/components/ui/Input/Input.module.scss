@@ -3,16 +3,26 @@
     padding: 10px 15px;
     font-size: 18px;
     height: 55px;
-    border: 1px solid var(--gray);
+    border: 1px solid var(--light-gray);
     border-radius: 15px;
     outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     &:focus {
         border: 1.5px solid var(--primary);
         box-shadow: 0 0 4px 0 #fe782b;
     }
     &::placeholder {
         color: #999;
+    }
+
+    &[readOnly] {
+        &:focus, &:hover, &:active {
+            border: 1px solid var(--light-gray) !important;
+            outline: none;
+            box-shadow: none;
+        }
     }
 }
 .inputWrapper > div {

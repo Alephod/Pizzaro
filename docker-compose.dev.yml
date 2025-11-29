@@ -8,7 +8,7 @@ services:
             - '3000:3000'
         volumes:
             - ./frontend:/usr/app
-            - pizzaro_public:/usr/app/public
+            - ./frontend/public:/usr/app/public
         env_file:
             - .env.local
         depends_on:
@@ -27,4 +27,3 @@ services:
 
 volumes:
     db_data:
-    pizzaro_public:

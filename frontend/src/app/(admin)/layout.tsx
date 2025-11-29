@@ -14,7 +14,7 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-    title: 'Pizzaro',
+    title: 'Pizzaro Admin',
     description: 'Pizzaro App',
 };
 

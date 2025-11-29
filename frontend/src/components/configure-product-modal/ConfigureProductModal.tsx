@@ -146,10 +146,23 @@ export function ConfigureProductModal({ product, schema, onClose, initialItem }:
                     <p className={styles.description}>
                         {ingredients.map((ingredient, index) => (
                             <React.Fragment key={ingredient.name}>
-                                <span onClick={() => toggleIngredient(ingredient.name)} className={clsx(styles.ingredient, removedIngredients.has(ingredient.name) ? styles.removedIngredient : '')}>
+                                <span
+                                    className={clsx({
+                                        [styles.ingredient]: ingredient.isRemovable,
+                                        [styles.removedIngredient]: ingredient.isRemovable && removedIngredients.has(ingredient.name),
+                                    })}
+                                    onClick={ingredient.isRemovable ? () => toggleIngredient(ingredient.name) : undefined}
+                                >
                                     {ingredient.name}
                                     {ingredient.isRemovable && (
-                                        <button className={styles.removeButton} aria-label={removedIngredients.has(ingredient.name) ? `Вернуть ${ingredient.name}` : `Удалить ${ingredient.name}`}>
+                                        <button
+                                            className={styles.removeButton}
+                                            aria-label={
+                                                removedIngredients.has(ingredient.name)
+                                                    ? `Вернуть ${ingredient.name}`
+                                                    : `Удалить ${ingredient.name}`
+                                            }
+                                        >
                                             {removedIngredients.has(ingredient.name) ? <Undo2 size={10} /> : <X />}
                                         </button>
                                     )}

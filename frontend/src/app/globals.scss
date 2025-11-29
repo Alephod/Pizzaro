@@ -4,6 +4,7 @@
     --primary: #fe782b;
     --danger: #ff4747;
     --green: #57c45b;
+    --brown: #AA6A4E;
     --gray: #b1b1b1;
     --light-gray: #e5e5e5;
     --colorText: #171717;
@@ -26,6 +27,8 @@ body {
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
 }
 
 * {
